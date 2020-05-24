@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+set -eu
+
+: ${HTTPD_CONFWATCH:=}
+
+exec 2>&1
+#source /env
+
+COMMAND=/usr/local/sbin/httpd-confwatch
+PID_FILE=/run/httpd-confwatch.pid
+
+# Create pid file's directory if not exist
+#install -d -o root -g root ${PID_FILE%/*}
+
+# Check httpd command is executable or not
+test -x ${COMMAND} || exit 1
+
+# Test httpd configuration
+#apachectl configtest || exit 1
+
+#trap "pkill -SIGHUP runsvdir" SIGTERM SIGINT
+
+echo "Starting '${COMMAND}' with PID: $$"
+
+echo $$ > $PID_FILE
+
+exec ${COMMAND} "$HTTPD_CONFWATCH"

@@ -1,0 +1,321 @@
+kind: pipeline
+name: httpd-php74
+
+volumes:
+  - name: docker
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+
+steps:
+- name: setup-httpd
+  image: alpine
+  environment: &setup_env
+    APP_VER_MAJOR: 2
+    APP_VER_MINOR: 4
+    APP_VER_PATCH: 43
+    PHP_VERSION_MAJOR: 7
+    PHP_VERSION_MINOR: 4
+    PHP_VERSION_PATCH: 6
+    PHP_VERSION: 7.4.6
+    PHP_SHA256: d740322f84f63019622b9f369d64ea5ab676547d2bdcf12be77a5a4cffd06832
+  commands:
+    - echo -e -n "$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${APP_VER_MAJOR}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}" >> .tags
+    #- echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+    - echo -e -n ",php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",latest" >> .tags
+
+- name: publish-httpd
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/httpd
+    build_args_from_env:
+    - PHP_VERSION
+    - PHP_SHA256
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master
+
+- name: setup-php-fpm
+  image: alpine
+  environment:
+    <<: *setup_env
+  commands:
+    - echo -e -n "$${PHP_VERSION}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${PHP_VERSION_MAJOR}" > .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+    - echo -e -n ",latest" >> .tags
+
+- name: publish-php-fpm
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/php-fpm
+    dockerfile: php-fpm/Dockerfile
+    build_args:
+    - IMAGE_FROM=izdock/httpd:php7.4
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master
+
+---
+kind: pipeline
+name: httpd-php73
+
+volumes:
+  - name: docker
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+
+steps:
+- name: setup-httpd
+  image: alpine
+  environment: &setup_env
+    APP_VER_MAJOR: 2
+    APP_VER_MINOR: 4
+    APP_VER_PATCH: 43
+    PHP_VERSION_MAJOR: 7
+    PHP_VERSION_MINOR: 3
+    PHP_VERSION_PATCH: 18
+    PHP_VERSION: 7.3.18
+    PHP_SHA256: 7b3e2479a8d6fd7666dcdef8aec50d49c4599cc6ee86e48d41724cfd99cc9e58
+  commands:
+    - echo -e -n "$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+    - echo -e -n ",php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+
+- name: publish-httpd
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/httpd
+    build_args_from_env:
+    - PHP_VERSION
+    - PHP_SHA256
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master
+
+- name: setup-php-fpm
+  image: alpine
+  environment:
+    <<: *setup_env
+  commands:
+    - echo -e -n "$${PHP_VERSION}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${PHP_VERSION_MAJOR}" > .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+
+- name: publish-php-fpm
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/php-fpm
+    dockerfile: php-fpm/Dockerfile
+    build_args:
+    - IMAGE_FROM=izdock/httpd:php7.3
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master
+
+---
+kind: pipeline
+name: httpd-php72
+
+volumes:
+  - name: docker
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+
+steps:
+- name: setup-httpd
+  image: alpine
+  environment: &setup_env
+    APP_VER_MAJOR: 2
+    APP_VER_MINOR: 4
+    APP_VER_PATCH: 43
+    PHP_VERSION_MAJOR: 7
+    PHP_VERSION_MINOR: 2
+    PHP_VERSION_PATCH: 31
+    PHP_VERSION: 7.2.31
+    PHP_SHA256: 8beaa634bb878a96af9bc8643811ea46973f5f41ad2bfb6ab4cfd290e5a39806
+  commands:
+    - echo -e -n "$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+    - echo -e -n ",php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+
+- name: publish-httpd
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/httpd
+    build_args_from_env:
+    - PHP_VERSION
+    - PHP_SHA256
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master
+
+- name: setup-php-fpm
+  image: alpine
+  environment:
+    <<: *setup_env
+  commands:
+    - echo -e -n "$${PHP_VERSION}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${PHP_VERSION_MAJOR}" > .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+
+- name: publish-php-fpm
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/php-fpm
+    dockerfile: php-fpm/Dockerfile
+    build_args:
+    - IMAGE_FROM=izdock/httpd:php7.2
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master
+
+---
+kind: pipeline
+name: httpd-php71
+
+volumes:
+  - name: docker
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+
+steps:
+- name: setup-httpd
+  image: alpine
+  environment: &setup_env
+    APP_VER_MAJOR: 2
+    APP_VER_MINOR: 4
+    APP_VER_PATCH: 43
+    PHP_VERSION_MAJOR: 7
+    PHP_VERSION_MINOR: 1
+    PHP_VERSION_PATCH: 33
+    PHP_VERSION: 7.1.33
+    PHP_SHA256: bd7c0a9bd5433289ee01fd440af3715309faf583f75832b64fe169c100d52968
+  commands:
+    - echo -e -n "$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${APP_VER_MAJOR}.$${APP_VER_MINOR}.$${APP_VER_PATCH}-php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+    - echo -e -n ",php$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+
+- name: publish-httpd
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/httpd
+    build_args_from_env:
+    - PHP_VERSION
+    - PHP_SHA256
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master
+
+- name: setup-php-fpm
+  image: alpine
+  environment:
+    <<: *setup_env
+  commands:
+    - echo -e -n "$${PHP_VERSION}-$${DRONE_BUILD_NUMBER}" > VERSION
+    - echo -e -n "$${PHP_VERSION_MAJOR}" > .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}" >> .tags
+    - echo -e -n ",$${PHP_VERSION_MAJOR}.$${PHP_VERSION_MINOR}.$${PHP_VERSION_PATCH}-$${DRONE_BUILD_NUMBER}" >> .tags
+
+- name: publish-php-fpm
+  image: plugins/docker
+  environment:
+    <<: *setup_env
+  settings:
+    repo: izdock/php-fpm
+    dockerfile: php-fpm/Dockerfile
+    build_args:
+    - IMAGE_FROM=izdock/httpd:php7.1
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker
+    path: /var/lib/docker
+  when:
+    event: [push, tag]
+    branch: master

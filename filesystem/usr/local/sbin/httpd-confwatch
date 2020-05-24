@@ -1,0 +1,51 @@
+#!/bin/bash
+
+DIR_CONFWATCH="$@"
+
+[ -z "$DIR_CONFWATCH" ] && echo "define a directory/file to watch" && exit 1
+
+# we need this for signal sending
+[ -z "$PID_FILE" ] && PID_FILE="/usr/local/apache2/logs/httpd.pid"
+
+#set -x
+
+# this waits for files changes and reload the master daemon
+function init_watch_files {
+  # inform
+  echo "[NOTICE] watching for changes in paths:[$DIR_CONFWATCH]"
+
+  for CONF in $DIR_CONFWATCH ; do
+    if [ ! -e "$CONF" ]; then
+      echo "[WARNING] watch file missing, please create file at: $CONF"
+      # if the file is not there, create it
+      #echo "[INFO] watch file missing, creating empty file at: $CONF"
+      #touch $CONF
+    fi
+  done
+
+  # wait for events
+  while true; do
+    watch_files
+  done
+}
+
+function watch_files {
+  # wait for events
+  inotifywait -r -e modify -e move -e create -e delete -q $DIR_CONFWATCH | while read path action file; do
+    if [[ "$file" =~ .*.cfg$ ]]; then
+    # if a watched event occured, send the signal
+    echo "[NOTICE] change detected on path:[$path] file:[$file] action:[$action]"
+
+    echo -n "[NOTICE] testing config file: " && apachectl configtest
+    if [ $? = 0 ]; then
+        echo "[NOTICE] reloading daemon (pid $( cat "$PID_FILE" )) and watching for new config changes..."
+        apachectl -k graceful
+      else
+        echo "[ERROR] config file problem detected, not reloading..."
+    fi
+    fi
+  done
+}
+
+init_watch_files
+
