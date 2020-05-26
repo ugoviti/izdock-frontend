@@ -1,20 +1,29 @@
-FROM php:7.4.6-fpm
+ARG APP_VER=7.4.6
+ARG IMAGE_FROM=php:${APP_VER}-fpm
+
+FROM ${IMAGE_FROM}
 
 MAINTAINER Ugo Viti <ugo.viti@initzero.it>
 
+# full app version
+ENV APP_VER=${APP_VER}
+
+# BUILD args
+ARG WEBSERVER="apache"
+
 ## app name
-ENV APP_NAME              "php"
-ENV APP_DESCRIPTION       "PHP Hypertext Preprocessor"
+ENV APP_NAME        "php"
+ENV APP_DESCRIPTION "PHP Hypertext Preprocessor"
 
 ## app ports
-ENV APP_PORT_HTTP         80
-ENV APP_PORT_HTTPS        443
+ENV APP_PORT_HTTP   80
+ENV APP_PORT_HTTPS  443
 
 ## app users
-ENV APP_UID               33
-ENV APP_GID               33
-ENV APP_USR               "www-data"
-ENV APP_GRP               "www-data"
+ENV APP_UID         33
+ENV APP_GID         33
+ENV APP_USR         "www-data"
+ENV APP_GRP         "www-data"
 
 # development debug mode (keep apt cache and source files)
 ARG APP_DEBUG=0
@@ -74,7 +83,6 @@ ENV DOCUMENTROOT=/var/www/html
 ENV APP_INSTALL_DEPS=' \
     tini \
     runit \
-    apache2 \
     rsync \
     net-tools \
     iftop \
@@ -103,6 +111,9 @@ RUN set -xe && \
   apt-get install -y --no-install-recommends \
   ${APP_INSTALL_DEPS} \
   && \
+  if [ "${WEBSERVER}" = "apache" ]; then apt-get install -y --no-install-recommends apache2 ; fi && \
+  if [ "${WEBSERVER}" = "nginx" ]; then apt-get install -y --no-install-recommends nginx ; fi && \
+  \
   # add user www-data to tomcat group, used with initzero backend integration
   groupadd -g 91 tomcat && gpasswd -a www-data tomcat && \
   # cleanup system
@@ -179,25 +190,46 @@ RUN set -ex && \
   : "---------- finalyzing configurations ----------" && \
   cp -a ${PHP_PREFIX}/etc/php/php.ini-production ${PHP_PREFIX}/etc/php/php.ini && \
   ln -s ${PHP_PREFIX}/etc/php /etc/php && \
-  [ -e "${HTTPD_PREFIX}" ] && mkdir -p "${HTTPD_PREFIX}/conf.d"
+  ln -s ${PHP_PREFIX}/etc/php-fpm.d /etc/php/php-fpm.d && \
+  ln -s ${PHP_PREFIX}/etc/php-fpm.conf /etc/php/php-fpm.conf && \
+  ln -s ${PHP_PREFIX}/etc/pear.conf /etc/php/pear.conf && \
+  [ -e "${HTTPD_PREFIX}" ] && mkdir -p "${HTTPD_PREFIX}/conf.d" && \
+  [ -e "${HTTPD_PREFIX}" ] && echo "IncludeOptional ${HTTPD_PREFIX}/conf.d/*.conf" >> "${HTTPD_PREFIX}/apache2.conf"
 
 # exposed ports
 EXPOSE \
   ${APP_PORT_HTTP}/tcp \
   ${APP_PORT_HTTPS}/tcp
 
-# container pre-entrypoint variables
-ENV APP_RUNAS       "false"
-ENV MULTISERVICE    "true"
-ENV ENTRYPOINT_TINI "true"
-ENV HTTPD_CONF_FILE  "${HTTPD_PREFIX}/sites-available/000-default.conf"
-
-ENV UMASK           0002
-
 # add files to container
 ADD Dockerfile filesystem README.md /
+
+# runtime args
+ARG APP_RUNAS="false"
+ARG MULTISERVICE="false"
+ARG ENTRYPOINT_TINI="true"
+ARG APP_CMD="php-fpm"
+
+# container pre-entrypoint variables
+ENV APP_CMD            "${APP_CMD}"
+ENV APP_RUNAS          "${APP_RUNAS}"
+ENV MULTISERVICE       "${MULTISERVICE}"
+ENV ENTRYPOINT_TINI    "${ENTRYPOINT_TINI}"
+ENV HTTPD_CONF_FILE    "${HTTPD_PREFIX}/apache2.conf"
+ENV HTTPD_VIRTUAL_FILE "${HTTPD_PREFIX}/sites-available/000-default.conf"
+ENV UMASK              0002
+
+## CI args
+ARG APP_VER_BUILD
+ARG APP_BUILD_COMMIT
+ARG APP_BUILD_DATE
+
+# define other build variables
+ENV APP_VER          "${APP_VER}"
+ENV APP_VER_BUILD    "${APP_VER_BUILD}"
+ENV APP_BUILD_COMMIT "${APP_BUILD_COMMIT}"
+ENV APP_BUILD_DATE   "${APP_BUILD_DATE}"
 
 # start the container process
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["php-fpm"]
-#CMD ["apache2-foreground"]

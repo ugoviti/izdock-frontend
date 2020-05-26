@@ -63,26 +63,26 @@ relink_dir() {
 # exec app hooks
 appHooks
 
-# set default system umask before starting the container
-[ ! -z "$UMASK" ] && umask $UMASK
+if [ "$MULTISERVICE" = "true" ]; then
+    # if this container will run multiple commands, override the entry point cmd
+    CMD="runsvdir -P /etc/service"
+elif [ "$APP_RUNAS" = "true" ]; then
+    # run the process as user if specified
+    CMD="runuser -p -u $APP_USR -- $@"
+  else
+    # run the specified command without modifications
+    CMD="$@"
+fi
 
 # use tini init manager if defined in Dockerfile
-[ "$ENTRYPOINT_TINI" = "true" ] && ENTRYPOINT="tini -g --" || ENTRYPOINT=""
+[ "$ENTRYPOINT_TINI" = "true" ] && CMD="tini -g -- $CMD"
 
-# if this container will run multiple commands, override the entry point cmd
-echo "=> Executing $APP_NAME entrypoint command: $@"
+echo "=> Executing $APP_NAME entrypoint command: $CMD"
 echo "==============================================================================="
-if [ "$MULTISERVICE" = "true" ]; then
-  set -x
-  exec $ENTRYPOINT runsvdir -P /etc/service
- else
-  # run the process as user if specified
-  if [ "$APP_RUNAS" = "true" ]; then
-      set -x
-      exec $ENTRYPOINT runuser -p -u $APP_USR -- $@
-    else
-      set -x
-      exec $ENTRYPOINT $@
-  fi
-fi
+# set default system umask before starting the container
+[ ! -z "$UMASK" ] && umask $UMASK
+set -x
+
+exec $CMD
+
 exit $?
