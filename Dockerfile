@@ -195,6 +195,7 @@ RUN set -ex && \
   ln -s ${PHP_PREFIX}/etc/php-fpm.conf /etc/php/php-fpm.conf && \
   ln -s ${PHP_PREFIX}/etc/pear.conf /etc/php/pear.conf && \
   ln -s /usr/lib/apache2/modules /etc/apache2/modules && \
+  ln -s /usr/bin/rotatelogs /usr/sbin/rotatelogs && \
   [ -e "${HTTPD_PREFIX}" ] && mkdir -p "${HTTPD_PREFIX}/conf.d" && \
   [ -e "${HTTPD_PREFIX}" ] && echo "IncludeOptional ${HTTPD_PREFIX}/conf.d/*.conf" >> "${HTTPD_PREFIX}/apache2.conf"
 
