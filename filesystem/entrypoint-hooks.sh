@@ -87,11 +87,11 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
     #sed -r "s|^LoadModule mpm_|#LoadModule mpm_|i" -i "${HTTPD_CONF_FILE}"
     #sed -r "s|^#LoadModule mpm_${HTTPD_MPM}_module|LoadModule mpm_${HTTPD_MPM}_module|i" -i "${HTTPD_CONF_FILE}"
     # debian 10 apache
-    if ! a2query -m mpm_$HTTPD_MPM >/dev/null 2>&1 ; then a2dismod mpm_$(a2query -M) && a2enmod mpm_$HTTPD_MPM ;fi
+    if ! a2query -m mpm_$HTTPD_MPM >/dev/null 2>&1 ; then a2dismod mpm_$(a2query -M) 1>/dev/null && a2enmod mpm_$HTTPD_MPM 1>/dev/null ;fi
     
     if [ "$HTTPD_MPM" = "event" ]; then
       echo "--> INFO: enabling http2 module for mpm_$HTTPD_MPM"
-      a2enmod http2
+      a2enmod http2 1>/dev/null
     fi
     ;;
   esac
@@ -106,13 +106,15 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
         PHPFPM_ENABLED="true"
         echo "--> WARNING: disabling apache integrated mod_php module because current worker 'mpm_$HTTPD_MPM' is not compatible with PHP ZTS (Zend Thread Safe) compiled: $PHP_VERSION_ALL"
         echo "--> INFO: enabling php-fpm because: HTTPD_MPM=$HTTPD_MPM and PHPFPM_ENABLED=$PHPFPM_ENABLED"
-        a2enmod proxy_fcgi
+        a2enmod proxy_fcgi 1>/dev/null
+        if [ ! -e "${HTTPD_CONF_DIR}/conf.d/php-fpm.conf" && -w ${HTTPD_CONF_DIR}/conf.d/php-fpm.conf ]; then
         echo "<FilesMatch \"\.php$\">
   <If \"-f %{REQUEST_FILENAME}\">
     # use the unix domain socket (don't use for docker env)
     SetHandler \"proxy:fcgi://127.0.0.1:9000\"
   </If>
 </FilesMatch>" > ${HTTPD_CONF_DIR}/conf.d/php-fpm.conf
+        fi
       fi
     fi
     ;;
@@ -124,12 +126,12 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
       echo "--> INFO: enabling Apache mod_php (because apache MPM worker = $HTTPD_MPM): $PHP_VERSION_ALL"
       # enable mod_php
       # debian 10 apache
-      if ! a2query -m php7 >/dev/null 2>&1 ; then a2enmod php7 ;fi
+      if ! a2query -m php7 >/dev/null 2>&1 ; then a2enmod php7 1>/dev/null ;fi
     fi
    else
     echo "--> INFO: disabling mod_php because: PHP_ENABLED=$PHP_ENABLED"
     # debian 10 apache
-    if a2query -m php7 >/dev/null 2>&1 ; then a2dismod php7 ;fi
+    if a2query -m php7 >/dev/null 2>&1 ; then a2dismod php7 1>/dev/null ;fi
   fi
 
   # manage php-fpm service
@@ -148,7 +150,7 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
     echo "--> INFO: enabling mod_ssl module because: HTTPD_MOD_SSL=${HTTPD_MOD_SSL}"
     sed "s/#LoadModule ssl_module/LoadModule ssl_module/" -i "${HTTPD_CONF_FILE}"
     # debian 10 apache
-    if ! a2query -m ssl >/dev/null 2>&1 ; then a2enmod ssl ;fi
+    if ! a2query -m ssl >/dev/null 2>&1 ; then a2enmod ssl 1>/dev/null ;fi
   fi
 
   # verify if SSL files exist otherwise generate self signed certs
