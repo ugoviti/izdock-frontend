@@ -17,7 +17,7 @@
 : ${PHP_ENABLED:=true}            # (**true**|false) enable apache module mod_php
 : ${PHPFPM_ENABLED:=false}        # (true|**false**) enable php-fpm service
 : ${PHPINFO:=false}               # (true|**false**) if true, then automatically create a **info.php** file into webroot
-: ${DOCUMENTROOT:=/var/www/localhost/htdocs} # (**directory path**) default webroot path
+: ${DOCUMENTROOT:=/var/www/html} # (**directory path**) default webroot path
 : ${PHP_PREFIX:=/usr/local/php}   # PHP base path
 : ${PHP_INI_DIR:=$PHP_PREFIX/etc/php} # php ini files directory
 : ${PHP_CONF:="$PHP_INI_DIR/php.ini"} # path of php.ini file
@@ -83,7 +83,7 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
   # configure apache mpm
   case $HTTPD_MPM in
     worker|event|prefork)
-    echo "--> INFO: configuring default apache worker to: mpm_$HTTPD_MPM"
+    echo "--> INFO: Setting default apache worker to: mpm_$HTTPD_MPM"
     #sed -r "s|^LoadModule mpm_|#LoadModule mpm_|i" -i "${HTTPD_CONF_FILE}"
     #sed -r "s|^#LoadModule mpm_${HTTPD_MPM}_module|LoadModule mpm_${HTTPD_MPM}_module|i" -i "${HTTPD_CONF_FILE}"
     # debian 10 apache
@@ -104,8 +104,8 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
       if [ "$PHP_ENABLED" != "false" ]; then
         PHP_ENABLED="false"
         PHPFPM_ENABLED="true"
-        echo "--> WARNING: disabling apache integrated mod_php module because current worker 'mpm_$HTTPD_MPM' is not compatible with PHP ZTS (Zend Thread Safe) compiled: $PHP_VERSION_ALL"
-        echo "--> INFO: enabling php-fpm because: HTTPD_MPM=$HTTPD_MPM and PHPFPM_ENABLED=$PHPFPM_ENABLED"
+        #echo "--> WARNING: Disabling apache integrated mod_php module because current worker 'mpm_$HTTPD_MPM' is not compatible with PHP ZTS (Zend Thread Safe) compiled: $PHP_VERSION_ALL"
+        echo "--> INFO: Enabling php-fpm because: HTTPD_MPM=$HTTPD_MPM and PHPFPM_ENABLED=$PHPFPM_ENABLED"
         a2enmod proxy_fcgi 1>/dev/null
         if [[ ! -e "${HTTPD_CONF_DIR}/conf.d/php-fpm.conf" && -w ${HTTPD_CONF_DIR}/conf.d/php-fpm.conf ]]; then
         echo "<FilesMatch \"\.php$\">
