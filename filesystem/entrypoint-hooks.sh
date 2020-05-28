@@ -74,7 +74,7 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
   echo "ServerName ${SERVERNAME}" >> "${HTTPD_CONF_FILE}"
   
   echo "--> INFO: Setting default DocumentRoot to: ${DOCUMENTROOT}"
-  sed "s|/var/www/localhost/htdocs|${DOCUMENTROOT}|" -i "${HTTPD_CONF_FILE}"
+  sed "s|/var/www/localhost/htdocs|${DOCUMENTROOT}|" -i "${HTTPD_VIRTUAL_FILE}"
   
   #echo "--> INFO: Setting default logging to: CustomLog /proc/self/fd/1 common env=!nolog"
   #sed "s|CustomLog .*|CustomLog /proc/self/fd/1 common env=!nolog|" -i "${HTTPD_CONF_FILE}"
