@@ -93,8 +93,8 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
     ;;
   esac
 
-  PHP_VERSION_ALL=$(php -v | head -n1)
   # Verify if PHP is Thread Safe compiled (ZTS)
+  PHP_VERSION_ALL=$(php -v | head -n1)
   case $HTTPD_MPM in
 	  worker|event)
 	  if echo $PHP_VERSION_ALL | grep -i nts >/dev/null; then
@@ -136,13 +136,13 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
   fi
 
   # manage php-fpm service
-#   if [ "$PHPFPM_ENABLED" = "true" ]; then
-#      echo "--> INFO: enabling php-fpm service via multiservice manager"
-#      MULTISERVICE=true
-#     else
-#      echo "--> INFO: disabling php-fpm service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
-#      [ "$MULTISERVICE" = "true" ] && rm -rf /etc/service/php-fpm
-#   fi
+  if [[ "$PHPFPM_ENABLED" = "true" && "$HTTPD_ENABLED" = "true" ]]; then
+     echo "--> INFO: enabling MULTISERVICE container management because HTTPD_ENABLED=true and PHPFPM_ENABLED=true"
+     MULTISERVICE=true
+    else
+     echo "--> INFO: disabling php-fpm service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
+     [ "$MULTISERVICE" = "true" ] && rm -rf /etc/service/php-fpm
+  fi
 
   # enable mod_ssl
   if [ "${HTTPD_MOD_SSL}" = "true" ]; then

@@ -73,7 +73,7 @@ volumes:
 
 depends_on:
   # must run after the first pipeline
-  - php-fpm-7.4
+  - php-fpm-7.4x
 
 trigger:
   status:

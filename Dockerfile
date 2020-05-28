@@ -12,8 +12,8 @@ ENV APP_VER=${APP_VER}
 ARG WEBSERVER="apache"
 
 ## app name
-ENV APP_NAME        "php"
-ENV APP_DESCRIPTION "PHP Hypertext Preprocessor"
+ENV APP_NAME        "php-fpm"
+ENV APP_DESCRIPTION "PHP-FPM (Hypertext Preprocessor + FastCGI Process Manager)"
 
 ## app ports
 ENV APP_PORT_HTTP   80
