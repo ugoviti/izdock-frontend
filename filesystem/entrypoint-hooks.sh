@@ -58,6 +58,9 @@ print_ext() {
 
 ## exec entrypoint hooks
 
+# load system variables
+. /etc/os-release
+
 # HTTPD configuration
 if [ "$HTTPD_ENABLED" = "true" ]; then
   echo "=> Configuring Apache Web Server..."
@@ -117,28 +120,24 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
 
   # manage mod_php
   if [ "$PHP_ENABLED" = "true" ]; then
-    echo "--> INFO: enabling Apache mod_php: $PHP_VERSION_ALL"
-    # enable mod_php
-    echo "#LoadModule php7_module modules/libphp7.so
-    DirectoryIndex index.php index.html
-    <FilesMatch \.php$>
-      SetHandler application/x-httpd-php
-    </FilesMatch>" > ${HTTPD_CONF_DIR}/conf.d/php.conf
-    [ "$PHPINFO" = "true" ] && echo "<?php phpinfo(); ?>" > ${DOCUMENTROOT}/info.php
-    # debian 10 apache
-    if ! a2query -m php7 >/dev/null 2>&1 ; then a2enmod php7 ;fi
-    
+    if [  "$HTTPD_MPM" = "prefork" ]; then
+      echo "--> INFO: enabling Apache mod_php (because apache MPM worker = $HTTPD_MPM): $PHP_VERSION_ALL"
+      # enable mod_php
+      # debian 10 apache
+      if ! a2query -m php7 >/dev/null 2>&1 ; then a2enmod php7 ;fi
+    fi
    else
     echo "--> INFO: disabling mod_php because: PHP_ENABLED=$PHP_ENABLED"
-    sed "s/LoadModule php/#LoadModule php/" -i "${HTTPD_CONF_FILE}"
     # debian 10 apache
     if a2query -m php7 >/dev/null 2>&1 ; then a2dismod php7 ;fi
   fi
 
   # manage php-fpm service
-  if [[ "$PHPFPM_ENABLED" = "true" && "$HTTPD_ENABLED" = "true" ]]; then
-     echo "--> INFO: enabling MULTISERVICE container management because HTTPD_ENABLED=true and PHPFPM_ENABLED=true"
-     MULTISERVICE=true
+  if [ "$PHPFPM_ENABLED" = "true" ]; then
+     if [ "$HTTPD_ENABLED" = "true" ]; then
+      echo "--> INFO: enabling MULTISERVICE container management because HTTPD_ENABLED=true and PHPFPM_ENABLED=true"
+      MULTISERVICE=true
+     fi
     else
      echo "--> INFO: disabling php-fpm service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
      [ "$MULTISERVICE" = "true" ] && rm -rf /etc/service/php-fpm
