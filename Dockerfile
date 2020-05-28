@@ -165,17 +165,17 @@ RUN set -ex && \
   \
   # remove packages used for build stage
   apt-mark auto '.*' > /dev/null && \
-  [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark && \
-  find ${PREFIX} -type f -executable -o -name "*.so" -exec ldd '{}' ';' \
-    | awk '/=>/ { print $(NF-1) }' \
+  [ ! -z "$savedAptMark" ] && apt-mark manual $savedAptMark && \
+  ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
+    | awk '/=>/ { print $3 }' \
     | sort -u \
-    | xargs -r dpkg-query --search \
+    | xargs -r dpkg-query -S \
     | cut -d: -f1 \
     | sort -u \
-    | xargs -r apt-mark manual \
+    | xargs -rt apt-mark manual \
   && \
   : "---------- removing apt cache and unneeded packages ----------" && \
-  apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+  apt-get purge --auto-remove -o APT::AutoRemove::RecommendsImportant=false -y && \
   rm -rf /var/lib/apt/lists/* /tmp/* && \
   # update pecl channel definitions https://github.com/docker-library/php/issues/443
   pecl update-channels && \
