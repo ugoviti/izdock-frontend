@@ -6,6 +6,7 @@ FROM ${IMAGE_FROM}
 MAINTAINER Ugo Viti <ugo.viti@initzero.it>
 
 # full app version
+ARG APP_VER
 ENV APP_VER=${APP_VER}
 
 # BUILD args
@@ -193,6 +194,7 @@ RUN set -ex && \
   ln -s ${PHP_PREFIX}/etc/php-fpm.d /etc/php/php-fpm.d && \
   ln -s ${PHP_PREFIX}/etc/php-fpm.conf /etc/php/php-fpm.conf && \
   ln -s ${PHP_PREFIX}/etc/pear.conf /etc/php/pear.conf && \
+  ln -s /usr/lib/apache2/modules /etc/apache2/modules && \
   [ -e "${HTTPD_PREFIX}" ] && mkdir -p "${HTTPD_PREFIX}/conf.d" && \
   [ -e "${HTTPD_PREFIX}" ] && echo "IncludeOptional ${HTTPD_PREFIX}/conf.d/*.conf" >> "${HTTPD_PREFIX}/apache2.conf"
 
