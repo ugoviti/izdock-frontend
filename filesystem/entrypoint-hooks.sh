@@ -107,7 +107,7 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
         echo "--> WARNING: disabling apache integrated mod_php module because current worker 'mpm_$HTTPD_MPM' is not compatible with PHP ZTS (Zend Thread Safe) compiled: $PHP_VERSION_ALL"
         echo "--> INFO: enabling php-fpm because: HTTPD_MPM=$HTTPD_MPM and PHPFPM_ENABLED=$PHPFPM_ENABLED"
         a2enmod proxy_fcgi 1>/dev/null
-        if [ ! -e "${HTTPD_CONF_DIR}/conf.d/php-fpm.conf" && -w ${HTTPD_CONF_DIR}/conf.d/php-fpm.conf ]; then
+        if [[ ! -e "${HTTPD_CONF_DIR}/conf.d/php-fpm.conf" && -w ${HTTPD_CONF_DIR}/conf.d/php-fpm.conf ]]; then
         echo "<FilesMatch \"\.php$\">
   <If \"-f %{REQUEST_FILENAME}\">
     # use the unix domain socket (don't use for docker env)
