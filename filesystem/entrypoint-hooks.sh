@@ -246,7 +246,7 @@ if [ "$PHP_ENABLED" = "true" ] || [ "$PHPFPM_ENABLED" = "true" ]; then
       for MODULE in ${PHP_PREFIX}/lib/php/extensions/*/*.so; do docker-php-ext-enable $MODULE ; done \
     else
       for MODULE in ${PHP_MODULES_ENABLED} ; do echo "--> Enabling PHP module: $MODULE" ; docker-php-ext-enable $MODULE ; done
-      for MODULE in ${PHP_MODULES_DISABLED} ; do echo "--> Disabling PHP module: $MODULE" ; rm -f ${PHP_PREFIX}/conf.d/docker-php-ext-$MODULE.ini ; done
+      for MODULE in ${PHP_MODULES_DISABLED} ; do echo "--> Disabling PHP module: $MODULE" ; rm -f ${PHP_PREFIX}/etc/php/conf.d/docker-php-ext-$MODULE.ini ; done
   fi
 fi
 
