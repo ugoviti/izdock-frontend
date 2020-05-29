@@ -151,7 +151,8 @@ RUN set -ex && \
   \
   : "---------- install extra php modules ----------" && \
   : "--- install module: gd ---" && \
-  docker-php-ext-configure gd --with-freetype --with-jpeg && \
+  if [ $APP_VER \< 7.4.0 ];then docker-php-ext-configure gd --with-jpeg-dir ;fi && \
+  if [ $APP_VER \> 7.4.0 ];then docker-php-ext-configure gd --with-freetype --with-jpeg ;fi && \
   \
   : "--- install modules: ${PHP_MODULES_EXTRA} ---" && \
   docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
