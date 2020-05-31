@@ -40,10 +40,6 @@
 : ${password:=""}                       # password for auth smtp server
 : ${timeout:=3600}                      # connection timeout
 
-export MULTISERVICE UMASK HTTPD_ENABLED PHPFPM_ENABLED
-# set default umask
-umask $UMASK
-
 ## exec entrypoint hooks
 
 # load system variables
@@ -87,9 +83,6 @@ cfgService_httpd() {
   # verify if PHP is Thread Safe compiled (ZTS)
   PHP_VERSION_ALL=$(php -v | head -n1)
   if [ "$PHPFPM_ENABLED" = "true" ]; then
-    #echo "--> INFO: enabling MULTISERVICE container management because HTTPD_ENABLED=true and PHPFPM_ENABLED=true"
-    #MULTISERVICE=true
-  
     echo "--> INFO: enabling proxy fastcgi because: HTTPD_MPM=$HTTPD_MPM and PHPFPM_ENABLED=$PHPFPM_ENABLED"
     a2enmod proxy_fcgi 1>/dev/null
     
@@ -212,6 +205,10 @@ cfgService_nginx() {
   echo "=> Configuring NGINX Web Server..."
 }
 
+cfgService_nginxconfwatch() {
+  echo "=> Configuring NGINX Configuration Watch..."
+}
+
 cfgService_mta() {
   ## SSMTP MTA Agent
   if [ -e "/usr/sbin/ssmtp" ]; then
@@ -332,8 +329,30 @@ runHooks() {
 
   # enable/disable and configure services
   chkService PHPFPM_ENABLED
+  
+  if [[ "$HTTPD_ENABLED" = "true" && "$NGINX_ENABLED" = "true" ]]; then
+  echo "=> HTTPD_ENABLED=$HTTPD_ENABLED and NGINX_ENABLED=$NGINX_ENABLED can't be enabled in the same time. Defaulting to HTTPD_ENABLED=true"
+  HTTPD_ENABLED=true
+  NGINX_ENABLED=false
+  fi
+  
+  # apache webserver
   chkService HTTPD_ENABLED
+  
+  # nginx webserver
+  [ "$NGINX_ENABLED" = "false" ] && NGINXCONFWATCH_ENABLED="false"
   chkService NGINX_ENABLED
+  chkService NGINXCONFWATCH_ENABLED
+  
+  # multiservice management
+  if [[ "$PHPFPM_ENABLED" = "true" && "$HTTPD_ENABLED" = "false" && "$NGINX_ENABLED" = "false" ]]; then
+    echo "=> disabling MULTISERVICE because HTTPD_ENABLED=$HTTPD_ENABLED and NGINX_ENABLED=$NGINX_ENABLED"
+    MULTISERVICE="false"
+  fi
 }
 
 runHooks
+
+export MULTISERVICE UMASK HTTPD_ENABLED PHPFPM_ENABLED
+# set default umask
+umask $UMASK
