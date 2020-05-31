@@ -20,7 +20,8 @@ steps:
 - name: setup
   image: alpine
   commands:
-    - echo -e -n "$${APP_VER}-${DRONE_BUILD_NUMBER}" > .tags
+    - echo -e -n "$${APP_VER}-${DRONE_COMMIT_SHA:0:7}" > .tags
+    - echo -e -n "$${APP_VER}-${DRONE_BUILD_NUMBER}" >> .tags
     - echo -e -n ",$${APP_VER}" >> .tags
     - echo -e -n ",$${APP_VER%.*}" >> .tags
     - echo -e -n ",$${APP_VER%%.*}" >> .tags
@@ -75,10 +76,9 @@ steps:
 - name: setup
   image: alpine
   commands:
-    - echo -e -n "$${APP_VER}-${DRONE_BUILD_NUMBER}" > .tags
+    - echo -e -n "$${APP_VER}-${DRONE_COMMIT_SHA:0:7}" > .tags
+    - echo -e -n "$${APP_VER}-${DRONE_BUILD_NUMBER}" >> .tags
     - echo -e -n ",$${APP_VER}" >> .tags
-    - echo -e -n ",$${APP_VER%.*}" >> .tags
-    - echo -e -n ",$${APP_VER%%.*}" >> .tags
 
 - name: publish
   image: plugins/docker
