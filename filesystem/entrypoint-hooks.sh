@@ -5,7 +5,8 @@
 
 # default variables
 ## webserver options
-: ${MULTISERVICE:=true}          # (true|**false**) enable multiple service manager
+: ${ENTRYPOINT_TINI:=true}
+: ${MULTISERVICE:=true}           # (true|**false**) enable multiple service manager
 : ${UMASK:=0002}                  # (**0002**) default umask when creating new files
 : ${SERVERNAME:=$HOSTNAME}        # (**$HOSTNAME**) default web server hostname
 : ${HTTPD_ENABLED:=true}          # (**true**|false) # enable apache web server
