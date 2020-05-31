@@ -7,9 +7,6 @@
 
 appHooks() {
   : ${APP_RELINK:=false}
-  : ${APP_RUNAS:=false}
-  : ${ENTRYPOINT_TINI:=false}
-  : ${MULTISERVICE:=false}
   : ${APP_NAME:=CHANGEME}
   : ${APP_DESCRIPTION:=CHANGEME}
   : ${APP_VER:=latest}
@@ -62,6 +59,11 @@ relink_dir() {
 
 # exec app hooks
 appHooks
+
+# entrypoints default variables if not specified
+: ${APP_RUNAS:=false}
+: ${ENTRYPOINT_TINI:=false}
+: ${MULTISERVICE:=false}
 
 if [ "$MULTISERVICE" = "true" ]; then
     # if this container will run multiple commands, override the entry point cmd

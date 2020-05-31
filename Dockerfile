@@ -210,18 +210,11 @@ EXPOSE \
 # add files to container
 ADD Dockerfile filesystem README.md /
 
-# runtime args
-ARG APP_RUNAS="false"
-ARG MULTISERVICE="false"
-ARG ENTRYPOINT_TINI="true"
-ARG APP_CMD="php-fpm"
-
 # container pre-entrypoint variables
+ENV APP_RUNAS          ""
+ENV MULTISERVICE       ""
+ENV ENTRYPOINT_TINI    ""
 ENV WEBSERVER          "${WEBSERVER}"
-ENV APP_CMD            "${APP_CMD}"
-ENV APP_RUNAS          "${APP_RUNAS}"
-ENV MULTISERVICE       "${MULTISERVICE}"
-ENV ENTRYPOINT_TINI    "${ENTRYPOINT_TINI}"
 ENV HTTPD_CONF_FILE    "${HTTPD_PREFIX}/apache2.conf"
 ENV HTTPD_VIRTUAL_FILE "${HTTPD_PREFIX}/sites-available/000-default.conf"
 ENV UMASK              0002

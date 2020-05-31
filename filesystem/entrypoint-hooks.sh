@@ -5,7 +5,7 @@
 
 # default variables
 ## webserver options
-: ${MULTISERVICE:=false}          # (true|**false**) enable multiple service manager
+: ${MULTISERVICE:=true}          # (true|**false**) enable multiple service manager
 : ${UMASK:=0002}                  # (**0002**) default umask when creating new files
 : ${SERVERNAME:=$HOSTNAME}        # (**$HOSTNAME**) default web server hostname
 : ${HTTPD_ENABLED:=true}          # (**true**|false) # enable apache web server
@@ -138,11 +138,8 @@ if [ "$HTTPD_ENABLED" = "true" ]; then
   if [ "$PHPFPM_ENABLED" = "true" ]; then
      if [ "$HTTPD_ENABLED" = "true" ]; then
       echo "--> INFO: enabling MULTISERVICE container management because HTTPD_ENABLED=true and PHPFPM_ENABLED=true"
-      MULTISERVICE=true
+      #MULTISERVICE=true
      fi
-    else
-     echo "--> INFO: disabling php-fpm service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
-     [ "$MULTISERVICE" = "true" ] && rm -rf /etc/service/php-fpm
   fi
 
   # enable mod_ssl
