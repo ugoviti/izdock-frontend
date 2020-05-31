@@ -1,8 +1,2 @@
 #!/bin/sh
-if [ "$PHPFPM_ENABLED" != "false" ]; then
-  echo "--> INFO: enabling php-fpm service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
-  exec php-fpm
- else
-  echo "--> INFO: disabling php-fpm service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
-  sv down php-fpm
-fi
+exec php-fpm
