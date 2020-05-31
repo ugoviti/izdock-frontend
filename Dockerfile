@@ -231,7 +231,7 @@ ARG APP_VER_BUILD
 ARG APP_BUILD_COMMIT
 ARG APP_BUILD_DATE
 
-# define other build variables
+# define other build variables -
 ENV APP_VER          "${APP_VER}"
 ENV APP_VER_BUILD    "${APP_VER_BUILD}"
 ENV APP_BUILD_COMMIT "${APP_BUILD_COMMIT}"
