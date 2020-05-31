@@ -1,3 +1,8 @@
 #!/bin/sh
-#exec httpd -D FOREGROUND
-exec apache2-foreground
+if [ "$WEBSERVER" = "apache" ]; then
+  exec apache2-foreground
+  #exec httpd -D FOREGROUND
+ else
+  echo "--> INFO: disabling httpd service because: WEBSERVER=$WEBSERVER"
+  sv down httpd
+fi

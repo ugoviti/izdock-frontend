@@ -13,8 +13,8 @@ ENV APP_VER=${APP_VER}
 ARG WEBSERVER="apache"
 
 ## app name
-ENV APP_NAME        "php-fpm"
-ENV APP_DESCRIPTION "PHP-FPM (Hypertext Preprocessor + FastCGI Process Manager)"
+ENV APP_NAME        "frontend"
+ENV APP_DESCRIPTION "PHP-FPM + Apache/NGINX"
 
 ## app ports
 ENV APP_PORT_HTTP   80
@@ -103,6 +103,8 @@ ENV APP_INSTALL_DEPS=' \
     shared-mime-info \
     xz-utils \
     inotify-tools \
+    apache2 \
+    nginx \
     '
 
 RUN set -xe && \
@@ -112,8 +114,8 @@ RUN set -xe && \
   apt-get install -y --no-install-recommends \
   ${APP_INSTALL_DEPS} \
   && \
-  if [ "${WEBSERVER}" = "apache" ]; then apt-get install -y --no-install-recommends apache2 ; fi && \
-  if [ "${WEBSERVER}" = "nginx" ]; then apt-get install -y --no-install-recommends nginx ; fi && \
+  #if [ "${WEBSERVER}" = "apache" ]; then apt-get install -y --no-install-recommends apache2 ; fi && \
+  #if [ "${WEBSERVER}" = "nginx" ]; then apt-get install -y --no-install-recommends nginx ; fi && \
   \
   # add user www-data to tomcat group, used with initzero backend integration
   groupadd -g 91 tomcat && gpasswd -a www-data tomcat && \
@@ -158,7 +160,7 @@ RUN set -ex && \
   docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
   \
   : "--- enable modules: ${PHP_MODULES_ENABLED} ---" && \
-  [ -z "${PHP_MODULES_ENABLED}" ] || docker-php-ext-enable ${PHP_MODULES_ENABLED} && \
+  [ ! -z "${PHP_MODULES_ENABLED}" ] && docker-php-ext-enable ${PHP_MODULES_ENABLED} ; \
   \
   if [ ${APP_DEBUG} -eq 0 ]; then \
   : "---------- cleanup build packages and temp files ----------" && \
@@ -215,6 +217,7 @@ ARG ENTRYPOINT_TINI="true"
 ARG APP_CMD="php-fpm"
 
 # container pre-entrypoint variables
+ENV WEBSERVER          "${WEBSERVER}"
 ENV APP_CMD            "${APP_CMD}"
 ENV APP_RUNAS          "${APP_RUNAS}"
 ENV MULTISERVICE       "${MULTISERVICE}"

@@ -3,6 +3,6 @@
 if [ "$PHPFPM_ENABLED" != "false" ]; then
   exec php-fpm
  else
-  echo "--> INFO: disabling php-fpm service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
+  echo "--> INFO: disabling $0 service because: PHPFPM_ENABLED=$PHPFPM_ENABLED"
   sv down php-fpm
 fi

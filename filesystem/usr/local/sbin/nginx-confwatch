@@ -1,0 +1,50 @@
+#!/bin/bash
+
+NGINX_CONFWATCH="$@"
+
+[ -z "$NGINX_CONFWATCH" ] && echo "define a directory/file to watch" && exit 1
+
+# we need this for signal sending
+[ -z "$PID_FILE" ] && PID_FILE="/run/nginx.pid"
+
+#set -x
+
+# this waits for changes in $NGINX_CONFWATCH and sends nginx a USR1 signal to reload the logfiles
+function watch_files {
+  # inform
+  echo "[NOTICE] watching for changes in watchfile at: $NGINX_CONFWATCH"
+
+  # loopy-loop!
+  # FIXME we need to handle SIGHUP/SIGTERM/SIGKILL nicely some day
+  while true; do
+    # if the file is not there, create
+    for CONF in $NGINX_CONFWATCH ; do 
+    if [ ! -e "$CONF" ]; then
+      echo "[WARNING] watch file missing, please create file at: $CONF"
+      #echo "[WARNING] watch file missing, creating empty file at: $CONF"
+      #touch $CONF
+    fi
+    done
+
+    # wait for events
+    inotifywait -r -e modify -e move -e create -e delete -q $NGINX_CONFWATCH
+    # if a watched event occured, send the signal
+    if [ $? -eq 0 ]; then
+      echo "[NOTICE] watch file changed, testing and reloading nginx (pid $( cat "$PID_FILE" ))..."
+
+      /usr/sbin/nginx -t
+      if [ $? = 0 ]; then
+          echo "[NOTICE] reloading nginx and watching for new config changes"
+          /usr/sbin/nginx -s reload
+        else
+          echo "[ERROR] config file problem detected, not reloading"
+      fi
+
+      #kill -USR1 "$( cat "$PID_FILE" )"
+    fi
+
+    sleep 10
+  done
+}
+
+watch_files
