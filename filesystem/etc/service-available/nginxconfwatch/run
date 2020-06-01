@@ -8,7 +8,7 @@ COMMAND=/usr/local/sbin/nginx-confwatch
 PID_FILE=/run/nginx-confwatch.pid
 
 # Create pid file's directory
-install -d -o nginx -g nginx ${PID_FILE%/*}
+install -d -o www-data -g www-data ${PID_FILE%/*}
 
 # Check nginx command is executable or not
 test -x ${COMMAND} || exit 0

@@ -12,18 +12,20 @@
 : ${RUNIT_DIR:=/etc/service}       # RUNIT services dir
 
 : ${WEBSERVER:=apache}             # (*apache**|nginx) default webserver
+: ${WEBSERVER_ENABLED:=true}       # (*apache**|nginx) default webserver
 
-: ${NGINX_ENABLED:=false}          # (true|**false**) # enable nginx web server
-: ${NGINXCONFWATCH_ENABLED:=false} # (true|**false**) # enable nginx web server dynamic configuration update watch
+: ${PHPFPM_ENABLED:=true}          # (true|**false**) enable php-fpm service
 
-: ${HTTPD_ENABLED:=true}           # (**true**|false) enable apache web server
+: ${HTTPD_ENABLED:=false}          # (**true**|false) enable apache web server
 : ${HTTPD_MOD_SSL:=false}          # (true|**false**) enable apache module mod_ssl
 : ${HTTPD_CONF_DIR:=/etc/apache2}  # (**/etc/apache2**) apache config dir
 : ${HTTPD_CONF_FILE:=$HTTPD_CONF_DIR/apache2.conf} # apache master config file
 : ${HTTPD_VIRTUAL_FILE:=$HTTPD_CONF_DIR/sites-available/000-default.conf} # apache default virtual config file
 : ${HTTPD_MPM:=event}              # (event|worker|**prefork**) # default apache mpm worker to use
 
-: ${PHPFPM_ENABLED:=true}             # (true|**false**) enable php-fpm service
+: ${NGINX_ENABLED:=false}          # (true|**false**) # enable nginx web server
+: ${NGINXCONFWATCH_ENABLED:=false} # (true|**false**) # enable nginx web server dynamic configuration update watch
+
 : ${PHPINFO:=false}                   # (true|**false**) if true, then automatically create a **info.php** file into webroot/.test/info.php
 : ${DOCUMENTROOT:=/var/www/html}      # (**directory path**) default webroot path
 : ${PHP_PREFIX:=/usr/local/php}       # PHP base path
@@ -317,12 +319,12 @@ chkService() {
   local SERVICE="$(echo $SERVICE_VAR | sed 's/_.*//' | sed -e 's/\(.*\)/\L\1/')"
   [ -z "$SERVICE_DAEMON" ] && local SERVICE_DAEMON="$SERVICE"
   if [ "$SERVICE_ENABLED" = "true" ]; then
-    echo "=> Enabling $SERVICE_DAEMON service... because $SERVICE_VAR=$SERVICE_ENABLED"
+    echo "=> enabling $SERVICE_DAEMON service... because $SERVICE_VAR=$SERVICE_ENABLED"
     ln -s "${RUNIT_DIR}-available/$SERVICE" "${RUNIT_DIR}/$SERVICE"
     echo "--> configuring $SERVICE_DAEMON service..."
     cfgService_$SERVICE
    else
-    echo "=> Disabling $SERVICE_DAEMON service... because $SERVICE_VAR=$SERVICE_ENABLED"
+    echo "=> disabling $SERVICE_DAEMON service... because $SERVICE_VAR=$SERVICE_ENABLED"
     [ -e "${RUNIT_DIR}/$SERVICE" ] && rm -rf "${RUNIT_DIR}/$SERVICE"
   fi
 }
@@ -334,41 +336,35 @@ runHooks() {
   # php-fpm configuration
   chkService PHPFPM_ENABLED
 
-  if [[ "$HTTPD_ENABLED" = "true" && "$NGINX_ENABLED" = "true" ]];then
-    echo "=> WARNING: HTTPD_ENABLED=$HTTPD_ENABLED and NGINX_ENABLED=$NGINX_ENABLED can't be enabled at the same time... defaulting to WEBSERVER=httpd"
-    WEBSERVER=httpd
+  # webserver configuration
+  if [ "$WEBSERVER_ENABLED" = "true" ]; then
+    echo "=> enabling WEBSERVER because WEBSERVER_ENABLED=$WEBSERVER_ENABLED"
+    case $WEBSERVER in
+      httpd|apache)
+        echo "--> setting HTTPD_ENABLED=true because WEBSERVER=$WEBSERVER"
+        HTTPD_ENABLED=true
+        ;;
+      nginx)
+        echo "--> setting NGINX_ENABLED=true because WEBSERVER=$WEBSERVER"
+        NGINX_ENABLED=true
+        NGINXCONFWATCH_ENABLED=true
+        ;;
+      *)
+        echo "--> WARNING: invalid WEBSERVER defined: $WEBSERVER"
+        echo "---> INFO: disabling WEBSERVER"
+        HTTPD_ENABLED=false
+        NGINX_ENABLED=false
+        NGINXCONFWATCH_ENABLED=false
+        ;;
+    esac
+    chkService HTTPD_ENABLED
+    chkService NGINX_ENABLED
+    chkService NGINXCONFWATCH_ENABLED
   fi
   
-  # webserver configuration
-  case $WEBSERVER in
-    httpd|apache)
-      # apache webserver
-      HTTPD_ENABLED=true
-      NGINX_ENABLED=false
-      NGINXCONFWATCH_ENABLED=false
-      ;;
-    nginx)
-      # nginx webserver
-      HTTPD_ENABLED=false
-      NGINX_ENABLED=true
-      NGINXCONFWATCH_ENABLED=true
-      ;;
-    *)
-      echo "=> WARNING: invalid WEBSERVER defined: $WEBSERVER"
-      echo "--> INFO: defaulting WEBSERVER to: httpd "
-      HTTPD_ENABLED=true
-      NGINX_ENABLED=false
-      NGINXCONFWATCH_ENABLED=false
-      ;;
-  esac
-
-  chkService HTTPD_ENABLED
-  chkService NGINX_ENABLED
-  chkService NGINXCONFWATCH_ENABLED
-  
   # multiservice management
-  if [[ "$PHPFPM_ENABLED" = "true" && "$HTTPD_ENABLED" = "false" && "$NGINX_ENABLED" = "false" ]]; then
-    echo "=> disabling MULTISERVICE because HTTPD_ENABLED=$HTTPD_ENABLED and NGINX_ENABLED=$NGINX_ENABLED"
+  if [[ "$PHPFPM_ENABLED" = "true" && "$WEBSERVER_ENABLED" = "false" ]]; then
+    echo "=> disabling MULTISERVICE because WEBSERVER_ENABLED=$WEBSERVER_ENABLED"
     MULTISERVICE="false"
   fi
 }
