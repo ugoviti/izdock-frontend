@@ -9,9 +9,6 @@ MAINTAINER Ugo Viti <ugo.viti@initzero.it>
 ARG APP_VER
 ENV APP_VER=${APP_VER}
 
-# BUILD args
-#ARG WEBSERVER="apache"
-
 ## app name
 ENV APP_NAME        "frontend"
 ENV APP_DESCRIPTION "PHP-FPM + Apache/NGINX"
@@ -219,6 +216,8 @@ ENV PHPFPM_ENABLED     "true"
 ENV HTTPD_CONF_FILE    "${HTTPD_PREFIX}/apache2.conf"
 ENV HTTPD_VIRTUAL_FILE "${HTTPD_PREFIX}/sites-available/000-default.conf"
 ENV UMASK              0002
+ENV WEBSERVER          "apache"
+
 
 ## CI args
 ARG APP_VER_BUILD

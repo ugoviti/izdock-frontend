@@ -6,24 +6,27 @@
 # default variables
 ## webserver options
 : ${ENTRYPOINT_TINI:=true}
-: ${MULTISERVICE:=true}           # (true|**false**) enable multiple service manager
-: ${UMASK:=0002}                  # (**0002**) default umask when creating new files
-: ${SERVERNAME:=$HOSTNAME}        # (**$HOSTNAME**) default web server hostname
-: ${RUNIT_DIR:=/etc/service}      # RUNIT services dir
+: ${MULTISERVICE:=true}            # (true|**false**) enable multiple service manager
+: ${UMASK:=0002}                   # (**0002**) default umask when creating new files
+: ${SERVERNAME:=$HOSTNAME}         # (**$HOSTNAME**) default web server hostname
+: ${RUNIT_DIR:=/etc/service}       # RUNIT services dir
 
-: ${NGINX_ENABLED:=false}         # (**true**|false) # enable nginx web server
+: ${WEBSERVER:=apache}             # (*apache**|nginx) default webserver
 
-: ${HTTPD_ENABLED:=true}          # (**true**|false) # enable apache web server
-: ${HTTPD_MOD_SSL:=false}         # (true|**false**) enable apache module mod_ssl
-: ${HTTPD_CONF_DIR:=/etc/apache2} # (**/etc/apache2**) # apache config dir
-: ${HTTPD_CONF_FILE:=$HTTPD_CONF_DIR/apache2.conf} # (**/etc/apache2**) # apache master config file
-: ${HTTPD_VIRTUAL_FILE:=$HTTPD_CONF_DIR/sites-available/000-default.conf} # (**/etc/apache2**) # apache default virtual config file
-: ${HTTPD_MPM:=event}             # (event|worker|**prefork**) # default apache mpm worker to use
+: ${NGINX_ENABLED:=false}          # (true|**false**) # enable nginx web server
+: ${NGINXCONFWATCH_ENABLED:=false} # (true|**false**) # enable nginx web server dynamic configuration update watch
 
-: ${PHPFPM_ENABLED:=true}         # (true|**false**) enable php-fpm service
-: ${PHPINFO:=false}               # (true|**false**) if true, then automatically create a **info.php** file into webroot/.test/info.php
-: ${DOCUMENTROOT:=/var/www/html}  # (**directory path**) default webroot path
-: ${PHP_PREFIX:=/usr/local/php}   # PHP base path
+: ${HTTPD_ENABLED:=true}           # (**true**|false) enable apache web server
+: ${HTTPD_MOD_SSL:=false}          # (true|**false**) enable apache module mod_ssl
+: ${HTTPD_CONF_DIR:=/etc/apache2}  # (**/etc/apache2**) apache config dir
+: ${HTTPD_CONF_FILE:=$HTTPD_CONF_DIR/apache2.conf} # apache master config file
+: ${HTTPD_VIRTUAL_FILE:=$HTTPD_CONF_DIR/sites-available/000-default.conf} # apache default virtual config file
+: ${HTTPD_MPM:=event}              # (event|worker|**prefork**) # default apache mpm worker to use
+
+: ${PHPFPM_ENABLED:=true}             # (true|**false**) enable php-fpm service
+: ${PHPINFO:=false}                   # (true|**false**) if true, then automatically create a **info.php** file into webroot/.test/info.php
+: ${DOCUMENTROOT:=/var/www/html}      # (**directory path**) default webroot path
+: ${PHP_PREFIX:=/usr/local/php}       # PHP base path
 : ${PHP_INI_DIR:=$PHP_PREFIX/etc/php} # php ini files directory
 : ${PHP_CONF:="$PHP_INI_DIR/php.ini"} # path of php.ini file
 : ${PHP_MODULES_ENABLED:=""}
@@ -315,32 +318,51 @@ chkService() {
   [ -z "$SERVICE_DAEMON" ] && local SERVICE_DAEMON="$SERVICE"
   if [ "$SERVICE_ENABLED" = "true" ]; then
     echo "=> Enabling $SERVICE_DAEMON service... because $SERVICE_VAR=$SERVICE_ENABLED"
+    ln -s "${RUNIT_DIR}-available/$SERVICE" "${RUNIT_DIR}/$SERVICE"
     echo "--> configuring $SERVICE_DAEMON service..."
     cfgService_$SERVICE
    else
     echo "=> Disabling $SERVICE_DAEMON service... because $SERVICE_VAR=$SERVICE_ENABLED"
-    mv ${RUNIT_DIR}/$SERVICE ${RUNIT_DIR}_disabled/
+    [ -e "${RUNIT_DIR}/$SERVICE" ] && rm -rf "${RUNIT_DIR}/$SERVICE"
   fi
 }
 
 runHooks() {
-  # reconfigure MTA for sending mails
+  # configure local MTA and php sendmail function for sending mails
   cfgService_mta
 
-  # enable/disable and configure services
+  # php-fpm configuration
   chkService PHPFPM_ENABLED
-  
-  if [[ "$HTTPD_ENABLED" = "true" && "$NGINX_ENABLED" = "true" ]]; then
-  echo "=> HTTPD_ENABLED=$HTTPD_ENABLED and NGINX_ENABLED=$NGINX_ENABLED can't be enabled in the same time. Defaulting to HTTPD_ENABLED=true"
-  HTTPD_ENABLED=true
-  NGINX_ENABLED=false
+
+  if [[ "$HTTPD_ENABLED" = "true" && "$NGINX_ENABLED" = "true" ]];then
+    echo "=> WARNING: HTTPD_ENABLED=$HTTPD_ENABLED and NGINX_ENABLED=$NGINX_ENABLED can't be enabled at the same time... defaulting to WEBSERVER=httpd"
+    WEBSERVER=httpd
   fi
   
-  # apache webserver
+  # webserver configuration
+  case $WEBSERVER in
+    httpd|apache)
+      # apache webserver
+      HTTPD_ENABLED=true
+      NGINX_ENABLED=false
+      NGINXCONFWATCH_ENABLED=false
+      ;;
+    nginx)
+      # nginx webserver
+      HTTPD_ENABLED=false
+      NGINX_ENABLED=true
+      NGINXCONFWATCH_ENABLED=true
+      ;;
+    *)
+      echo "=> WARNING: invalid WEBSERVER defined: $WEBSERVER"
+      echo "--> INFO: defaulting WEBSERVER to: httpd "
+      HTTPD_ENABLED=true
+      NGINX_ENABLED=false
+      NGINXCONFWATCH_ENABLED=false
+      ;;
+  esac
+
   chkService HTTPD_ENABLED
-  
-  # nginx webserver
-  [ "$NGINX_ENABLED" = "false" ] && NGINXCONFWATCH_ENABLED="false"
   chkService NGINX_ENABLED
   chkService NGINXCONFWATCH_ENABLED
   
@@ -352,7 +374,5 @@ runHooks() {
 }
 
 runHooks
-
-export MULTISERVICE UMASK HTTPD_ENABLED PHPFPM_ENABLED
-# set default umask
+export MULTISERVICE UMASK PHPFPM_ENABLED HTTPD_ENABLED NGINX_ENABLED NGINXCONFWATCH_ENABLED
 umask $UMASK
