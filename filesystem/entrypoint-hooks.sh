@@ -23,8 +23,10 @@
 : ${HTTPD_VIRTUAL_FILE:=$HTTPD_CONF_DIR/sites-available/000-default.conf} # apache default virtual config file
 : ${HTTPD_MPM:=event}              # (event|worker|**prefork**) # default apache mpm worker to use
 
-: ${NGINX_ENABLED:=false}          # (true|**false**) # enable nginx web server
-: ${NGINXCONFWATCH_ENABLED:=false} # (true|**false**) # enable nginx web server dynamic configuration update watch
+: ${NGINX_ENABLED:=false}          # (true|**false**) enable nginx web server
+: ${NGINX_CONF_DIR:=/etc/nginx}    # (**/etc/nginx**) nginx config dir
+: ${NGINX_CONF_FILE:=$NGINX_CONF_DIR/nginx.conf} # nginx config file
+: ${NGINXCONFWATCH_ENABLED:=false} # (true|**false**) enable nginx web server dynamic configuration update watch
 
 : ${PHPINFO:=false}                   # (true|**false**) if true, then automatically create a **info.php** file into webroot/.test/info.php
 : ${DOCUMENTROOT:=/var/www/html}      # (**directory path**) default webroot path
@@ -58,7 +60,7 @@ cfgService_httpd() {
   
   echo "--> INFO: setting default ServerName to: ${SERVERNAME}"
   sed "s/#ServerName.*/ServerName ${SERVERNAME}/" -i "${HTTPD_CONF_FILE}"
-  # debian 10 apache
+  # debian 10 apache specific
   echo "ServerName ${SERVERNAME}" >> "${HTTPD_CONF_FILE}"
   
   echo "--> INFO: setting default DocumentRoot to: ${DOCUMENTROOT}"
@@ -208,6 +210,9 @@ cfgService_phpfpm() {
 
 cfgService_nginx() {
   echo "=> Configuring NGINX Web Server..."
+  
+  #echo "--> INFO: setting default ErrorLog to: /proc/self/fd/2"
+  #sed "s|error_log.*|error_log /proc/self/fd/2;|" -i "${NGINX_CONF_FILE}"
 }
 
 cfgService_nginxconfwatch() {

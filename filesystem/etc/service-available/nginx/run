@@ -19,4 +19,4 @@ ${COMMAND} -t -q || exit 0
 
 echo "Starting '${COMMAND}' with PID: $$"
 
-exec ${COMMAND} -g "daemon off;"
+exec ${COMMAND} -g "daemon off;error_log /dev/stdout info;"
