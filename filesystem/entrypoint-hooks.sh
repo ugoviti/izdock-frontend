@@ -11,7 +11,7 @@
 : ${SERVERNAME:=$HOSTNAME}         # (**$HOSTNAME**) default web server hostname
 : ${RUNIT_DIR:=/etc/service}       # RUNIT services dir
 
-: ${WEBSERVER:=apache}             # (*apache**|nginx) default webserver
+: ${WEBSERVER:=apache}             # (*apache**|nginx|none) default webserver (none or empty = disabled)
 : ${WEBSERVER_ENABLED:=true}       # (*apache**|nginx) default webserver
 
 : ${PHPFPM_ENABLED:=true}          # (true|**false**) enable php-fpm service
@@ -341,6 +341,12 @@ runHooks() {
   # php-fpm configuration
   chkService PHPFPM_ENABLED
 
+  # disable webserver if requested
+  if [[ -z "$WEBSERVER" || "$WEBSERVER" = "none" ]]; then
+    echo "---> INFO: disabling WEBSERVER because WEBSERVER=$WEBSERVER"
+    WEBSERVER_ENABLED="false"
+  fi
+  
   # webserver configuration
   if [ "$WEBSERVER_ENABLED" = "true" ]; then
     echo "=> enabling WEBSERVER because WEBSERVER_ENABLED=$WEBSERVER_ENABLED"
@@ -348,11 +354,14 @@ runHooks() {
       httpd|apache)
         echo "--> setting HTTPD_ENABLED=true because WEBSERVER=$WEBSERVER"
         HTTPD_ENABLED=true
+        chkService HTTPD_ENABLED
         ;;
       nginx)
         echo "--> setting NGINX_ENABLED=true because WEBSERVER=$WEBSERVER"
         NGINX_ENABLED=true
         NGINXCONFWATCH_ENABLED=true
+        chkService NGINX_ENABLED
+        chkService NGINXCONFWATCH_ENABLED
         ;;
       *)
         echo "--> WARNING: invalid WEBSERVER defined: $WEBSERVER"
@@ -362,9 +371,6 @@ runHooks() {
         NGINXCONFWATCH_ENABLED=false
         ;;
     esac
-    chkService HTTPD_ENABLED
-    chkService NGINX_ENABLED
-    chkService NGINXCONFWATCH_ENABLED
   fi
   
   # multiservice management
