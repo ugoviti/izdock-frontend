@@ -2,7 +2,7 @@ kind: pipeline
 name: frontend-7.4
 
 environment:
-  APP_VER: 7.4.6
+  APP_VER: 7.4.7
 
 platform:
   os: linux
