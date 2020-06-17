@@ -57,6 +57,7 @@ ENV PHP_MODULES_EXTRA=' \
     sysvsem \
     sysvshm \
     zip \
+    xsl \
     '
 
 ## disabled modules
@@ -135,6 +136,7 @@ ENV APP_BUILD_DEPS=' \
     libxml2-dev \
     libtidy-dev \
     libzip-dev \
+    libxslt-dev \
     '
 
 # install php modules
