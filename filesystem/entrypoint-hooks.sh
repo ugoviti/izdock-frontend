@@ -12,7 +12,7 @@
 : ${RUNIT_DIR:=/etc/service}       # RUNIT services dir
 
 : ${WEBSERVER:=apache}             # (*apache**|nginx|none) default webserver (none or empty = disabled)
-: ${WEBSERVER_ENABLED:=true}       # (*apache**|nginx) default webserver
+: ${WEBSERVER_ENABLED:=true}       # (**true**|false) enable web server
 
 : ${PHPFPM_ENABLED:=true}          # (true|**false**) enable php-fpm service
 
