@@ -1,17 +1,17 @@
-ARG APP_VER=7.4.8
+ARG APP_VER=7.4.9
 ARG IMAGE_FROM=php:${APP_VER}-fpm
 
 FROM ${IMAGE_FROM}
 
 MAINTAINER Ugo Viti <ugo.viti@initzero.it>
 
-# full app version
-ARG APP_VER
-ENV APP_VER=${APP_VER}
-
 ## app name
 ENV APP_NAME        "frontend"
 ENV APP_DESCRIPTION "PHP-FPM + Apache / NGINX Web Server"
+
+# full app version
+ARG APP_VER
+ENV APP_VER=${APP_VER}
 
 ## app ports
 ENV APP_PORT_HTTP   80

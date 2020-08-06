@@ -2,7 +2,13 @@ kind: pipeline
 name: frontend-7.4
 
 environment:
-  APP_VER: 7.4.8
+  APP_VER: 7.4.9
+
+trigger:
+  event:
+  - push
+  branch:
+  - master
 
 platform:
   os: linux
@@ -49,16 +55,19 @@ steps:
   volumes:
   - name: docker
     path: /var/lib/docker
-  when:
-    event: [push, tag]
-    branch: master
 
 ---
 kind: pipeline
 name: frontend-7.2
 
 environment:
-  APP_VER: 7.2.32
+  APP_VER: 7.2.33
+
+trigger:
+  event:
+  - push
+  branch:
+  - master
 
 platform:
   os: linux
@@ -102,6 +111,3 @@ steps:
   volumes:
   - name: docker
     path: /var/lib/docker
-  when:
-    event: [push, tag]
-    branch: master
