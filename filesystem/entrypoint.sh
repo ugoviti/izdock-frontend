@@ -66,8 +66,10 @@ appHooks
 : ${ENTRYPOINT_TINI:=false}
 : ${MULTISERVICE:=false}
 
-# if CMD_OVERRIDE get defined use it
+# if CMD_OVERRIDE is defined use it
 [ ! -z "$CMD_OVERRIDE" ] && CMD="${CMD_OVERRIDE}"
+
+echo CMD_OVERRIDE=${CMD_OVERRIDE}
 
 if [ "$MULTISERVICE" = "true" ]; then
     # if this container will run multiple commands, override the entry point cmd
