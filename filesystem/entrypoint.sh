@@ -66,11 +66,6 @@ appHooks
 : ${ENTRYPOINT_TINI:=false}
 : ${MULTISERVICE:=false}
 
-# if CMD_OVERRIDE is defined use it
-[ ! -z "$CMD_OVERRIDE" ] && CMD="${CMD_OVERRIDE}"
-
-echo CMD_OVERRIDE=${CMD_OVERRIDE}
-
 if [ "$MULTISERVICE" = "true" ]; then
     # if this container will run multiple commands, override the entry point cmd
     CMD="runsvdir -P /etc/service"
@@ -81,6 +76,11 @@ elif [ "$APP_RUNAS" = "true" ]; then
     # run the specified command without modifications
     CMD="$@"
 fi
+
+# at last if CMD_OVERRIDE is defined use it
+[ ! -z "$CMD_OVERRIDE" ] && CMD="${CMD_OVERRIDE}"
+
+echo CMD_OVERRIDE=${CMD_OVERRIDE} CMD=$CMD
 
 # use tini init manager if defined in Dockerfile
 [ "$ENTRYPOINT_TINI" = "true" ] && CMD="tini -g -- $CMD"
