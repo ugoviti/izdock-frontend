@@ -374,9 +374,13 @@ runHooks() {
   fi
   
   # multiservice management
-  if [[ "$PHPFPM_ENABLED" = "true" && "$WEBSERVER_ENABLED" = "false" ]]; then
+  if   [[ "$PHPFPM_ENABLED" = "true" && "$WEBSERVER_ENABLED" = "false" ]]; then
     echo "=> disabling MULTISERVICE because WEBSERVER_ENABLED=$WEBSERVER_ENABLED"
     MULTISERVICE="false"
+  elif [[ "$PHPFPM_ENABLED" = "false" && "$WEBSERVER_ENABLED" = "true" ]]; then
+    echo "=> disabling PHP-FPM because PHPFPM_ENABLED=$PHPFPM_ENABLED"
+    MULTISERVICE="false"
+    CMD=apache2-foreground
   fi
 }
 

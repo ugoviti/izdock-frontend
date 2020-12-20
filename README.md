@@ -2,7 +2,8 @@
 Production ready Apache / NGINX Web Server + PHP-FPM + izsendmail for MTA sending and logging
 
 # Supported tags
-* `7.4.X-COMMIT`, `7.4.X-BUILD`, `7.4.X`, `7.4`, `7`, `latest`
+* `8.0.X-COMMIT`, `8.0.X-BUILD`, `8.0.X`, `8.0`, `8`, `latest`
+* `7.4.X-COMMIT`, `7.4.X-BUILD`, `7.4.X`, `7.4`, `7`
 * `7.2.X-COMMIT`, `7.2.X-BUILD`, `7.2.X`, `7.2`
 
 Where **X** is the patch version number, **COMMIT** is the GIT commit ID, and **BUILD** is the build number (look into project [Tags](https://hub.docker.com/r/izdock/izpbx-frontend/tags) page to discover the latest versions) 
