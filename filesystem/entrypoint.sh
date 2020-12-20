@@ -13,6 +13,7 @@ appHooks() {
   : ${APP_VER_BUILD:=unknown}
   : ${APP_BUILD_COMMIT:=unknown}
   : ${APP_BUILD_DATE:=unknown}
+  : ${CMD_OVERRIDE:=}
 
   [ "${APP_BUILD_DATE}" != "unknown" ] && APP_BUILD_DATE=$(date -d @${APP_BUILD_DATE} +"%Y-%m-%d")
   
@@ -65,7 +66,8 @@ appHooks
 : ${ENTRYPOINT_TINI:=false}
 : ${MULTISERVICE:=false}
 
-[ ! -z "$CMD_OVERRIDE" ] && CMD=${CMD_OVERRIDE}
+# if CMD_OVERRIDE get defined use it
+[ ! -z "$CMD_OVERRIDE" ] && CMD="${CMD_OVERRIDE}"
 
 if [ "$MULTISERVICE" = "true" ]; then
     # if this container will run multiple commands, override the entry point cmd
