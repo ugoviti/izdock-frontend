@@ -1,7 +1,7 @@
 #!/bin/bash
 # initzero docker entrypoint init script
 # written by Ugo Viti <ugo.viti@initzero.it>
-# 20200524
+# 20201220
 
 #set -x
 
