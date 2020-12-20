@@ -80,8 +80,6 @@ fi
 # at last if CMD_OVERRIDE is defined use it
 [ ! -z "$CMD_OVERRIDE" ] && CMD="${CMD_OVERRIDE}"
 
-echo CMD_OVERRIDE=${CMD_OVERRIDE} CMD=$CMD
-
 # use tini init manager if defined in Dockerfile
 [ "$ENTRYPOINT_TINI" = "true" ] && CMD="tini -g -- $CMD"
 

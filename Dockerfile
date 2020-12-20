@@ -213,7 +213,6 @@ ADD Dockerfile filesystem README.md /
 ENV APP_RUNAS          ""
 ENV MULTISERVICE       ""
 ENV ENTRYPOINT_TINI    ""
-
 ENV WEBSERVER          "apache"
 ENV WEBSERVER_ENABLED  "true"
 ENV PHP_ENABLED        "true"
