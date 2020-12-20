@@ -380,7 +380,7 @@ runHooks() {
   elif [[ "$PHPFPM_ENABLED" = "false" && "$WEBSERVER_ENABLED" = "true" ]]; then
     echo "=> disabling PHP-FPM because PHPFPM_ENABLED=$PHPFPM_ENABLED"
     MULTISERVICE="false"
-    CMD=apache2-foreground
+    export CMD="apache2-foreground"
   fi
 }
 
