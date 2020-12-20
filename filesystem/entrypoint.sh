@@ -65,6 +65,8 @@ appHooks
 : ${ENTRYPOINT_TINI:=false}
 : ${MULTISERVICE:=false}
 
+[ ! -z "$CMD_OVERRIDE" ] && CMD=${CMD_OVERRIDE}
+
 if [ "$MULTISERVICE" = "true" ]; then
     # if this container will run multiple commands, override the entry point cmd
     CMD="runsvdir -P /etc/service"
