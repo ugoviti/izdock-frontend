@@ -344,6 +344,7 @@ runHooks() {
   chkService PHPFPM_ENABLED
 
   # create virtual hosts and php-fpm users if needed
+  # CSV format: "USERNAME1:USERID:GROUPID:HOMEDIR USERNAME2:USERID:GROUPID:HOMEDIR etc..."
   if [ ! -z "$PHP_USERS" ]; then
     echo "---> INFO: creating php-fpm system users:"
     for PHP_USER in $(echo $PHP_USERS); do
