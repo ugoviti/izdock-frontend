@@ -36,6 +36,8 @@
 : ${PHP_MODULES_ENABLED:=""}
 : ${PHP_MODULES_DISABLED:=""}
 
+: ${PHP_USERS:=""} # list of php-fpm users
+
 ## smtp options
 : ${domain:="$HOSTNAME"}                # local hostname
 : ${from:="root@localhost.localdomain"} # default From email address
@@ -341,6 +343,17 @@ runHooks() {
   # php-fpm configuration
   chkService PHPFPM_ENABLED
 
+  # create virtual hosts and php-fpm users if needed
+  if [ ! -z "$PHP_USERS" ]; then
+    for PHP_USER in $(echo $PHP_USERS); do
+      usr="$(echo $PHP_USER | awk -F":" '{print $1}')"
+      uid="$(echo $PHP_USER | awk -F":" '{print $2}')"
+      gid="$(echo $PHP_USER | awk -F":" '{print $3}')"
+      home="$(echo $PHP_USER | awk -F":" '{print $4}')"
+      echo /usr/sbin/useradd -r -M -d "$home" -s "/bin/false" -u "$uid" -g "$gid" "$usr"
+    done
+  fi
+  
   # disable webserver if requested
   if [[ -z "$WEBSERVER" || "$WEBSERVER" = "none" ]]; then
     echo "---> INFO: disabling WEBSERVER because WEBSERVER=$WEBSERVER"
