@@ -345,12 +345,14 @@ runHooks() {
 
   # create virtual hosts and php-fpm users if needed
   if [ ! -z "$PHP_USERS" ]; then
+    echo "---> INFO: creating php-fpm system users:"
     for PHP_USER in $(echo $PHP_USERS); do
       usr="$(echo $PHP_USER | awk -F":" '{print $1}')"
       uid="$(echo $PHP_USER | awk -F":" '{print $2}')"
       gid="$(echo $PHP_USER | awk -F":" '{print $3}')"
       home="$(echo $PHP_USER | awk -F":" '{print $4}')"
-      echo /usr/sbin/useradd -r -M -d "$home" -s "/bin/false" -u "$uid" -g "$gid" "$usr"
+      echo "---> useradd -r -M -d \"$home\" -s \"/bin/false\" -u \"$uid\" -g \"$gid\" \"$usr\""
+      useradd -r -M -d "$home" -s "/bin/false" -u "$uid" -g "$gid" "$usr"
     done
   fi
   
