@@ -101,6 +101,7 @@ ENV APP_INSTALL_DEPS=' \
     shared-mime-info \
     xz-utils \
     inotify-tools \
+    git \
     apache2 \
     nginx \
     '
