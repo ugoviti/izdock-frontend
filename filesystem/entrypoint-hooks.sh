@@ -28,6 +28,9 @@
 : ${NGINX_CONF_FILE:=$NGINX_CONF_DIR/nginx.conf} # nginx config file
 : ${NGINXCONFWATCH_ENABLED:=false} # (true|**false**) enable nginx web server dynamic configuration update watch
 
+: ${ERRORLOG:="/dev/stderr"}   # error log destination
+: ${CUSTOMLOG:="/dev/stdout"}  # custom access log destination
+
 : ${PHPINFO:=false}                   # (true|**false**) if true, then automatically create a **info.php** file into webroot/.test/info.php
 : ${DOCUMENTROOT:=/var/www/html}      # (**directory path**) default webroot path
 : ${PHP_PREFIX:=/usr/local/php}       # PHP base path
@@ -57,8 +60,10 @@
 cfgService_httpd() {
   echo "=> Configuring Apache Web Server..."
 
-  echo "--> INFO: setting default ErrorLog to: /proc/self/fd/2"
-  sed "s|ErrorLog.*|ErrorLog /proc/self/fd/2|" -i "${HTTPD_CONF_FILE}"
+  #set -x
+  echo "--> INFO: setting default ErrorLog to: ${ERRORLOG}"
+  sed "s;ErrorLog.*;ErrorLog \"${ERRORLOG}\";" -i "${HTTPD_CONF_FILE}"
+  #set +x
   
   echo "--> INFO: setting default ServerName to: ${SERVERNAME}"
   sed "s/#ServerName.*/ServerName ${SERVERNAME}/" -i "${HTTPD_CONF_FILE}"
@@ -68,8 +73,8 @@ cfgService_httpd() {
   echo "--> INFO: setting default DocumentRoot to: ${DOCUMENTROOT}"
   sed "s|DocumentRoot .*|DocumentRoot ${DOCUMENTROOT}|" -i "${HTTPD_VIRTUAL_FILE}"
   
-  #echo "--> INFO: Setting default logging to: CustomLog /proc/self/fd/1 common env=!nolog"
-  #sed "s|CustomLog .*|CustomLog /proc/self/fd/1 common env=!nolog|" -i "${HTTPD_CONF_FILE}"
+  #echo "--> INFO: Setting default logging to: CustomLog ${CUSTOMLOG} common env=!nolog"
+  #sed "s;CustomLog .*;CustomLog ${CUSTOMLOG} common env=!nolog;" -i "${HTTPD_CONF_FILE}"
   #echo "SetEnvIf Request_URI "GET /.probe" nolog" >> "${HTTPD_CONF_FILE}"
   
   # configure apache mpm
