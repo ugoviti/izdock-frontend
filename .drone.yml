@@ -18,11 +18,10 @@ platform:
 #  limit: 1
 
 volumes:
-  - name: docker_sock
-    path: /var/run/docker.sock
-  - name: docker_cache
-    path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
-        
+  - name: docker
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+
 steps:
 - name: setup
   image: alpine
@@ -51,6 +50,8 @@ steps:
     password:
       from_secret: DOCKER_PASSWORD
   volumes:
+  - name: docker_sock
+    path: /var/run/docker.sock
   - name: docker
     path: /var/lib/docker
 ---
@@ -75,10 +76,9 @@ platform:
 #  limit: 1
 
 volumes:
-  - name: docker_sock
-    path: /var/run/docker.sock
-  - name: docker_cache
-    path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+  - name: docker
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
 
 steps:
 - name: setup
@@ -111,6 +111,7 @@ steps:
     password:
       from_secret: DOCKER_PASSWORD
   volumes:
+  - name: docker_sock
+    path: /var/run/docker.sock
   - name: docker
     path: /var/lib/docker
-
