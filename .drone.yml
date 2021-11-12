@@ -25,7 +25,8 @@ volumes:
   - name: cache
     host:
       path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
-
+      
+steps:
 - name: restore-cache
   image: drillster/drone-volume-cache
   volumes:
@@ -34,9 +35,8 @@ volumes:
   settings:
     restore: true
     mount:
-      - ./docker
-      
-steps:
+    - ./docker
+
 - name: setup
   image: alpine
   commands:
@@ -80,4 +80,4 @@ steps:
   settings:
     rebuild: true
     mount:
-      - ./docker
+    - ./docker
