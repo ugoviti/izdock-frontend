@@ -56,7 +56,7 @@ steps:
   - name: docker_sock
     path: /var/run/docker.sock
   - name: docker
-    path: /var/lib/docker
+    path: /opt/var/lib/docker
 ---
 
 kind: pipeline
@@ -96,7 +96,6 @@ steps:
     - echo -e -n ",$${APP_VER%.*}" >> .tags
     - echo -e -n ",$${APP_VER%%.*}" >> .tags
     - echo -e -n ",latest" >> .tags
-    - cat .tags
 
 - name: publish
   image: plugins/docker
@@ -121,4 +120,4 @@ steps:
   - name: docker_sock
     path: /var/run/docker.sock
   - name: docker
-    path: /var/lib/docker
+    path: /opt/var/lib/docker
