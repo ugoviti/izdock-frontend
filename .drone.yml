@@ -18,11 +18,9 @@ platform:
 #  limit: 1
 
 volumes:
-  - name: docker_sock_host
+  - name: docker_sock
     host:
       path: /var/run/docker.sock
-  - name: docker_sock
-    temp: {}
   - name: docker
     host:
       path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
@@ -43,6 +41,7 @@ steps:
     APP_BUILD_DATE: "${DRONE_BUILD_FINISHED}"
   settings:
     repo: izdock/frontend
+    storage_path: /var/lib/docker
     build_args_from_env:
     - IMAGE_FROM
     - APP_VER
@@ -56,7 +55,7 @@ steps:
       from_secret: DOCKER_PASSWORD
   volumes:
   - name: docker_sock
-    path: /var/run
+    path: /var/run/docker.sock
   - name: docker
     path: /var/lib/docker
 ---
@@ -81,11 +80,9 @@ platform:
 #  limit: 1
 
 volumes:
-  - name: docker_sock_host
+  - name: docker_sock
     host:
       path: /var/run/docker.sock
-  - name: docker_sock
-    temp: {}
   - name: docker
     host:
       path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
@@ -109,6 +106,7 @@ steps:
     APP_BUILD_DATE: "${DRONE_BUILD_FINISHED}"
   settings:
     repo: izdock/frontend
+    storage_path: /var/lib/docker
     build_args_from_env:
     - IMAGE_FROM
     - APP_VER
@@ -122,6 +120,6 @@ steps:
       from_secret: DOCKER_PASSWORD
   volumes:
   - name: docker_sock
-    path: /var/run
+    path: /var/run/docker.sock
   - name: docker
     path: /var/lib/docker
