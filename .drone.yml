@@ -17,6 +17,10 @@ platform:
 #concurrency:
 #  limit: 1
 
+workspace:
+  base: /drone
+  path: src
+
 volumes:
   - name: cache
     host:
