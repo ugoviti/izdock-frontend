@@ -1,4 +1,5 @@
 kind: pipeline
+type: docker
 name: frontend-7.4
 
 environment:
@@ -16,11 +17,6 @@ platform:
 
 #concurrency:
 #  limit: 1
-
-volumes:
-  - name: docker_cache
-    host:
-      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
 
 steps:
 - name: setup
@@ -55,3 +51,8 @@ steps:
   volumes:
   - name: docker_cache
     path: /var/lib/docker2
+
+volumes:
+- name: docker_cache
+  host:
+    path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
