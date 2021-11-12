@@ -17,10 +17,6 @@ platform:
 #concurrency:
 #  limit: 1
 
-workspace:
-  base: /drone
-  path: src
-
 volumes:
   - name: cache
     host:
@@ -81,4 +77,3 @@ steps:
     rebuild: true
     mount:
     - /drone/docker
-# test
