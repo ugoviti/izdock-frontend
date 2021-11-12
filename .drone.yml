@@ -22,10 +22,20 @@ workspace:
   path: src
 
 volumes:
-  - name: docker_cache
+  - name: cache
     host:
       path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
 
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: cache
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - ./docker
+      
 steps:
 - name: setup
   image: alpine
@@ -59,5 +69,15 @@ steps:
       from_secret: DOCKER_PASSWORD
   # since drone/drone-runner-docker:1.7.0 volume mounting make /var/run/docker.sock doesn't works anymore
   #volumes:
-  #- name: docker_cache
+  #- name: cache
     #path: /drone/docker
+
+- name: rebuild-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: cache
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - ./docker
