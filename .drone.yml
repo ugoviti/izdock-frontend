@@ -35,6 +35,9 @@ steps:
 
 - name: publish
   image: plugins/docker
+  volumes:
+  - name: docker_cache
+    path: /var/lib/docker
   environment:
     APP_VER_BUILD: "${DRONE_BUILD_NUMBER}"
     APP_BUILD_COMMIT: "${DRONE_COMMIT_SHA:0:7}"
@@ -52,4 +55,3 @@ steps:
       from_secret: DOCKER_USERNAME
     password:
       from_secret: DOCKER_PASSWORD
-
