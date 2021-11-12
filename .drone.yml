@@ -58,6 +58,6 @@ steps:
     password:
       from_secret: DOCKER_PASSWORD
   # since drone/drone-runner-docker:1.7.0 volume mounting make /var/run/docker.sock doesn't works anymore
-  volumes:
-  - name: docker_cache
-    path: /drone/docker
+  #volumes:
+  #- name: docker_cache
+    #path: /drone/docker
