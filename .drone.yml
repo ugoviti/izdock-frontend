@@ -96,6 +96,7 @@ steps:
     - echo -e -n ",$${APP_VER%.*}" >> .tags
     - echo -e -n ",$${APP_VER%%.*}" >> .tags
     - echo -e -n ",latest" >> .tags
+    - cat .tags
 
 - name: publish
   image: plugins/docker
