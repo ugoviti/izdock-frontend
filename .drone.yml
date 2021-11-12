@@ -56,7 +56,7 @@ steps:
   - name: docker_sock
     path: /var/run/docker.sock
   - name: docker
-    path: /opt/var/lib/docker
+    path: /var/lib/docker
 ---
 
 kind: pipeline
@@ -91,11 +91,12 @@ steps:
   image: alpine
   commands:
     - echo -e -n "$${APP_VER}-${DRONE_COMMIT_SHA:0:7}" > .tags
+    - echo -e -n ",latest" >> .tags
     - echo -e -n ",$${APP_VER}-${DRONE_BUILD_NUMBER}" >> .tags
     - echo -e -n ",$${APP_VER}" >> .tags
     - echo -e -n ",$${APP_VER%.*}" >> .tags
     - echo -e -n ",$${APP_VER%%.*}" >> .tags
-    - echo -e -n ",latest" >> .tags
+  
 
 - name: publish
   image: plugins/docker
@@ -120,4 +121,4 @@ steps:
   - name: docker_sock
     path: /var/run/docker.sock
   - name: docker
-    path: /opt/var/lib/docker
+    path: /var/lib/docker
