@@ -18,7 +18,7 @@ platform:
 #  limit: 1
 
 volumes:
-  - name: docker_cache
+  - name: cache
     host:
       path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
 
