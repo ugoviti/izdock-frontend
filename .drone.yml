@@ -17,23 +17,16 @@ platform:
 #concurrency:
 #  limit: 1
 
+workspace:
+  base: /drone
+  path: src
+
 volumes:
-  - name: cache
+  - name: docker_cache
     host:
       path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
 
 steps:
-
-- name: restore-cache
-  image: drillster/drone-volume-cache
-  volumes:
-  - name: cache
-    path: /cache
-  settings:
-    restore: true
-    mount:
-      - /var/lib/docker
-
 - name: setup
   image: alpine
   commands:
@@ -46,6 +39,7 @@ steps:
 
 - name: publish
   image: plugins/docker
+  storage_path: /drone/docker
   environment:
     APP_VER_BUILD: "${DRONE_BUILD_NUMBER}"
     APP_BUILD_COMMIT: "${DRONE_COMMIT_SHA:0:7}"
@@ -63,13 +57,7 @@ steps:
       from_secret: DOCKER_USERNAME
     password:
       from_secret: DOCKER_PASSWORD
-
-- name: rebuild-cache
-  image: drillster/drone-volume-cache
-  volumes:
-  - name: cache
-    path: /cache
-  settings:
-    rebuild: true
-    mount:
-      - /var/lib/docker
+  # since drone/drone-runner-docker:1.7.0 volume mounting make /var/run/docker.sock doesn't works anymore
+  #volumes:
+  #- name: docker_cache
+    #path: /var/lib/docker
