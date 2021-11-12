@@ -52,6 +52,4 @@ steps:
       from_secret: DOCKER_USERNAME
     password:
       from_secret: DOCKER_PASSWORD
-  volumes:
-  - name: docker_cache
-    path: /test/cache
+
