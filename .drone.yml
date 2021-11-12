@@ -67,6 +67,87 @@ steps:
       from_secret: DOCKER_USERNAME
     password:
       from_secret: DOCKER_PASSWORD
+
+- name: rebuild-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: cache
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+    - /drone/docker
+    
+---
+
+kind: pipeline
+name: frontend-8.0
+
+environment:
+  APP_VER: 8.0.12
+
+trigger:
+  event:
+  - push
+  branch:
+  - master
+
+platform:
+  os: linux
+  arch: amd64
+
+#concurrency:
+#  limit: 1
+
+workspace:
+  base: /drone
+  path: src
+
+volumes:
+  - name: cache
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+      
+steps:
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: cache
+    path: /cache
+  settings:
+    restore: true
+    mount:
+    - /drone/docker
+
+- name: setup
+  image: alpine
+  commands:
+    - echo -e -n "$${APP_VER}-${DRONE_COMMIT_SHA:0:7}" > .tags
+    - echo -e -n ",$${APP_VER}-${DRONE_BUILD_NUMBER}" >> .tags
+    - echo -e -n ",$${APP_VER}" >> .tags
+    - echo -e -n ",$${APP_VER%.*}" >> .tags
+    - echo -e -n ",$${APP_VER%%.*}" >> .tags
+
+- name: publish
+  image: plugins/docker
+  environment:
+    APP_VER_BUILD: "${DRONE_BUILD_NUMBER}"
+    APP_BUILD_COMMIT: "${DRONE_COMMIT_SHA:0:7}"
+    APP_BUILD_DATE: "${DRONE_BUILD_FINISHED}"
+  settings:
+    storage_path: /drone/docker
+    repo: izdock/frontend
+    build_args_from_env:
+    - IMAGE_FROM
+    - APP_VER
+    - APP_VER_BUILD
+    - APP_BUILD_COMMIT
+    - APP_BUILD_DATE
+    - MULTISERVICE
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
   # since drone/drone-runner-docker:1.7.0 volume mounting make /var/run/docker.sock doesn't works anymore
   #volumes:
   #- name: cache
