@@ -1,4 +1,3 @@
-
 kind: pipeline
 name: frontend-7.4
 
@@ -18,6 +17,10 @@ platform:
 #concurrency:
 #  limit: 1
 
+volumes:
+  - name: docker_cache
+    host:
+      path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
 
 steps:
 - name: setup
@@ -49,3 +52,6 @@ steps:
       from_secret: DOCKER_USERNAME
     password:
       from_secret: DOCKER_PASSWORD
+  volumes:
+  - name: docker_cache
+    path: /var/lib/docker
