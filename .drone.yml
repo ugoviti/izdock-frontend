@@ -27,10 +27,12 @@ steps:
 - name: restore-cache
   image: drillster/drone-volume-cache
   volumes:
-  - name: docker_cache
-    path: /var/lib/docker
+  - name: cache
+    path: /cache
   settings:
     restore: true
+    mount:
+      - /var/lib/docker
 
 - name: setup
   image: alpine
@@ -65,7 +67,9 @@ steps:
 - name: rebuild-cache
   image: drillster/drone-volume-cache
   volumes:
-  - name: docker_cache
-    path: /var/lib/docker
+  - name: cache
+    path: /cache
   settings:
     rebuild: true
+    mount:
+      - /var/lib/docker
