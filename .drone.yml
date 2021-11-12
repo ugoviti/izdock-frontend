@@ -49,10 +49,10 @@ steps:
     password:
       from_secret: DOCKER_PASSWORD
   volumes:
-  - name: docker_cache
-    path: /var/lib/docker2
+  - name: cache
+    path: /tmp/cache
 
 volumes:
-- name: docker_cache
+- name: cache
   host:
-    path: /var/cache/drone/${DRONE_REPO}/${DRONE_STAGE_NAME}
+    path: /var/lib/cache
