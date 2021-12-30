@@ -11,7 +11,7 @@ trigger:
   event:
   - push
   branch:
-  - master
+  - main
 
 platform:
   os: linux
@@ -93,7 +93,7 @@ trigger:
   event:
   - push
   branch:
-  - master
+  - main
 
 platform:
   os: linux
