@@ -107,8 +107,8 @@ COPY ./public-html/ /var/www/html/
 Then, run the commands to build and run the Docker image:
 
 ```console
-$ docker build -t my-frontend .
-$ docker run -dit --name my-webapp -p 8080:80 my-frontend
+$ docker build --pull --rm --build-arg APP_VER=7.4.27 -t frontend:7.4.27 .
+$ docker run --rm -it -e PHPFPM_ENABLED=false -e ENTRYPOINT_TINI=false -p 8080:80 frontend:7.4.27
 ```
 
 Visit http://localhost and you will see It works!
