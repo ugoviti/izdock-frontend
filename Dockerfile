@@ -1,5 +1,5 @@
 ## https://www.php.net/downloads
-ARG APP_VER=8.0.14
+ARG APP_VER=8.1.11
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
 FROM ${IMAGE_FROM}
