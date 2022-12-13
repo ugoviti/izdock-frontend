@@ -122,11 +122,8 @@ SetHandler \"proxy:fcgi://127.0.0.1:9000\"
   # verify if SSL files exist otherwise generate self signed certs
   #set -x
 
-  # search for all certificates
-  #grep -H -r "^.*SSLCertificate.*File " ${HTTPD_CONF_DIR}/*.d/*.conf 2>/dev/null |
-
   # search if exist all SSLCertificateFile files
-  grep -H -r "^.*SSLCertificateFile " ${HTTPD_CONF_DIR}/*.d/*.conf 2>/dev/null |
+  grep -H -r "^.*SSLCertificateFile " ${HTTPD_CONF_DIR}/*.d/*.{conf,vhost} 2>/dev/null |
   {
   while read line; do
   config_file=$(echo $line | awk '{print $1}' | sed 's/:$//')
@@ -148,14 +145,14 @@ SetHandler \"proxy:fcgi://127.0.0.1:9000\"
 
       # ssl domain files detection (FIXME: find a better way to discover the used files name. we are assuming that every certificate is located into different dir)
       # detect the SSLCertificateFile
-      ssl_crt="$(grep -H -r "^.*SSLCertificateFile.*${ssl_dir}/" ${HTTPD_CONF_DIR}/*.d/*.conf | awk '{print $3}')"
+      ssl_crt="$(grep -H -r "^.*SSLCertificateFile.*${ssl_dir}/" ${HTTPD_CONF_DIR}/*.d/*.{conf,vhost} | awk '{print $3}')"
 
       # detect the SSLCertificateKeyFile
-      ssl_key="$(grep -H -r "^.*SSLCertificateKeyFile.*${ssl_dir}/" ${HTTPD_CONF_DIR}/*.d/*.conf | awk '{print $3}')"
+      ssl_key="$(grep -H -r "^.*SSLCertificateKeyFile.*${ssl_dir}/" ${HTTPD_CONF_DIR}/*.d/*.{conf,vhost} | awk '{print $3}')"
       ssl_csr="${ssl_dir}/${cn}.csr"
 
       # detect the SSLCertificateKeyFile
-      ssl_chain_crt="$(grep -H -r "^.*SSLCertificateChainFile.*${ssl_dir}/" ${HTTPD_CONF_DIR}/*.d/*.conf | awk '{print $3}')"
+      ssl_chain_crt="$(grep -H -r "^.*SSLCertificateChainFile.*${ssl_dir}/" ${HTTPD_CONF_DIR}/*.d/*.{conf,vhost} | awk '{print $3}')"
       ssl_chain_key="${ssl_dir}/${cn}.chain.key"
       ssl_chain_csr="${ssl_dir}/${cn}.chain.csr"
 
