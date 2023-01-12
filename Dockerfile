@@ -36,12 +36,21 @@ ENV HTTPD_PREFIX=/etc/apache2
 ENV PHP_PREFIX=${PREFIX}
 ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
 
-# php pecl modules to 
-ENV PHP_MODULES_PECL=' \
-    redis \
-    memcached \
-    xdebug \
-    '
+
+## php custom modules
+
+# https://github.com/Whissi/realpath_turbo
+ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
+
+# https://github.com/xdebug/xdebug/tags
+ENV PHP_MODULE_XDEBUG_VER='3.2.0'
+
+# https://github.com/phpredis/phpredis/tags
+ENV PHP_MODULE_REDIS_VER='5.3.7'
+
+# https://github.com/php-memcached-dev/php-memcached/tags
+ENV PHP_MODULE_MEMCACHED_VER='3.2.0'
+
 
 ENV PHP_MODULES_EXTRA=' \
     bz2 \
@@ -61,7 +70,6 @@ ENV PHP_MODULES_EXTRA=' \
     xsl \
     '
 
-ENV PHP_MODULE_CUSTOM_REALPATH_TURBO_VER='2.0.0'
 
 ## disabled modules
 # calendar
@@ -116,8 +124,8 @@ RUN set -xe && \
   apt-get install -y --no-install-recommends \
   ${APP_INSTALL_DEPS} \
   && \
-  #if [ "${WEBSERVER}" = "apache" ]; then apt-get install -y --no-install-recommends apache2 ; fi && \
-  #if [ "${WEBSERVER}" = "nginx" ]; then apt-get install -y --no-install-recommends nginx ; fi && \
+  #if [ "${WEBSERVER}" = "apache" ]; then apt-get install -y --no-install-recommends apache2 ;fi && \
+  #if [ "${WEBSERVER}" = "nginx" ]; then apt-get install -y --no-install-recommends nginx ;fi && \
   \
   # add user www-data to tomcat group, used with initzero backend integration
   groupadd -g 91 tomcat && gpasswd -a www-data tomcat && \
@@ -155,7 +163,7 @@ RUN set -xe && \
   : "--- install custom php module: realpath_turbo ---" && \
   cd /usr/src && \
   mkdir -p realpath_turbo && \
-  curl -fSL --connect-timeout 15 https://github.com/Whissi/realpath_turbo/releases/download/v${PHP_MODULE_CUSTOM_REALPATH_TURBO_VER}/realpath_turbo-${PHP_MODULE_CUSTOM_REALPATH_TURBO_VER}.tar.bz2 | tar jx --strip 1 -C realpath_turbo  && \
+  curl -fSL --connect-timeout 15 https://github.com/Whissi/realpath_turbo/releases/download/v${PHP_MODULE_REALPATH_TURBO_VER}/realpath_turbo-${PHP_MODULE_REALPATH_TURBO_VER}.tar.bz2 | tar jx --strip 1 -C realpath_turbo  && \
   cd realpath_turbo && \
   phpize && \
   ./configure --prefix=/usr/local && \
@@ -163,22 +171,30 @@ RUN set -xe && \
   #make test NO_INTERACTION=1 && \
   make install && \
   \
-  : "---------- install pecl php modules ----------" && \
-  for PHP_MODULE_PECL in ${PHP_MODULES_PECL}; do \
-    : "--- install pecl php module: ${PHP_MODULE_PECL} ---" && \
-    pecl install ${PHP_MODULE_PECL} \
-  ; done && \
+  : "--- install custom php module: redis ---" && \
+  pecl install redis-${PHP_MODULE_REDIS_VER} && \
+  \
+  : "--- install custom php module: memcached ---" && \
+  pecl install memcached-${PHP_MODULE_MEMCACHED_VER} && \
+  \
+  : "--- install custom php module: xdebug ---" && \
+  if [ $APP_VER \> 8.0.0 ]; then \
+    pecl install xdebug-${PHP_MODULE_XDEBUG_VER} ; \
+  else \
+    # stuck to 3.1.6 if php 7
+    pecl install xdebug-3.1.6 \
+  ;fi && \
   \
   : "---------- install extra php modules ----------" && \
   : "--- install module: gd ---" && \
-  if [ $APP_VER \< 7.4.0 ];then docker-php-ext-configure gd --with-jpeg-dir ;fi && \
-  if [ $APP_VER \> 7.4.0 ];then docker-php-ext-configure gd --with-freetype --with-jpeg ;fi && \
+  if [ $APP_VER \< 7.4.0 ]; then docker-php-ext-configure gd --with-jpeg-dir ;fi && \
+  if [ $APP_VER \> 7.4.0 ]; then docker-php-ext-configure gd --with-freetype --with-jpeg ;fi && \
   \
   : "--- install modules: ${PHP_MODULES_EXTRA} ---" && \
   docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
   \
   : "--- enable modules: ${PHP_MODULES_ENABLED} ---" && \
-  [ ! -z "${PHP_MODULES_ENABLED}" ] && docker-php-ext-enable ${PHP_MODULES_ENABLED} ; \
+  if [ ! -z "${PHP_MODULES_ENABLED}" ]; then docker-php-ext-enable ${PHP_MODULES_ENABLED} ;fi && \
   \
   if [ ${APP_DEBUG} -eq 0 ]; then \
   : "---------- cleanup build packages and temp files ----------" && \
@@ -187,7 +203,7 @@ RUN set -xe && \
   \
   # remove packages used for build stage
   apt-mark auto '.*' > /dev/null && \
-  [ ! -z "$savedAptMark" ] && apt-mark manual $savedAptMark && \
+  if [ ! -z "$savedAptMark" ]; then apt-mark manual $savedAptMark ;fi && \
   ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
     | awk '/=>/ { print $3 }' \
     | sort -u \
@@ -198,7 +214,7 @@ RUN set -xe && \
   && \
   : "---------- removing apt cache and unneeded packages ----------" && \
   apt-get purge --auto-remove -o APT::AutoRemove::RecommendsImportant=false -y && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /usr/src/* && \
+  rm -rf /var/lib/apt/lists/* /tmp/* && \
   # update pecl channel definitions https://github.com/docker-library/php/issues/443
   pecl update-channels && \
   rm -rf /tmp/pear ~/.pearrc \
@@ -217,8 +233,8 @@ RUN set -ex && \
   ln -s ${PHP_PREFIX}/etc/pear.conf /etc/php/pear.conf && \
   ln -s /usr/lib/apache2/modules /etc/apache2/modules && \
   ln -s /usr/bin/rotatelogs /usr/sbin/rotatelogs && \
-  [ -e "${HTTPD_PREFIX}" ] && mkdir -p "${HTTPD_PREFIX}/conf.d" && \
-  [ -e "${HTTPD_PREFIX}" ] && echo "IncludeOptional ${HTTPD_PREFIX}/conf.d/*.conf" >> "${HTTPD_PREFIX}/apache2.conf"
+  if [ -e "${HTTPD_PREFIX}" ]; then mkdir -p "${HTTPD_PREFIX}/conf.d" ;fi && \
+  if [ -e "${HTTPD_PREFIX}" ]; then echo "IncludeOptional ${HTTPD_PREFIX}/conf.d/*.conf" >> "${HTTPD_PREFIX}/apache2.conf" ;fi
 
 # exposed ports
 EXPOSE \
