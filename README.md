@@ -2,7 +2,8 @@
 Production ready Apache / NGINX Web Server + PHP-FPM + izsendmail for MTA sending and logging
 
 # Supported tags
-* `8.0.X-COMMIT`, `8.0.X-BUILD`, `8.0.X`, `8.0`, `8`, `latest`
+* `8.2.X-COMMIT`, `8.2.X-BUILD`, `8.2.X`, `8.2`, `8`, `latest`
+* `8.1.X-COMMIT`, `8.1.X-BUILD`, `8.1.X`, `8.1`
 * `7.4.X-COMMIT`, `7.4.X-BUILD`, `7.4.X`, `7.4`, `7`
 * `7.2.X-COMMIT`, `7.2.X-BUILD`, `7.2.X`, `7.2`
 
@@ -107,8 +108,8 @@ COPY ./public-html/ /var/www/html/
 Then, run the commands to build and run the Docker image:
 
 ```console
-$ docker build --pull --rm --build-arg APP_VER=7.4.27 -t frontend:7.4.27 .
-$ docker run --rm -it -e PHPFPM_ENABLED=false -e ENTRYPOINT_TINI=false -p 8080:80 frontend:7.4.27
+$ docker build --pull --rm --build-arg APP_VER=8.2.1 -t frontend:8.2.1 .
+$ docker run --rm -it -e PHPFPM_ENABLED=false -e ENTRYPOINT_TINI=false -p 8080:80 frontend:8.2.1
 ```
 
 Visit http://localhost and you will see It works!

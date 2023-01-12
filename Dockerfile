@@ -1,5 +1,5 @@
 ## https://www.php.net/downloads
-ARG APP_VER=8.1.12
+ARG APP_VER=8.2.1
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
 FROM ${IMAGE_FROM}
@@ -60,6 +60,8 @@ ENV PHP_MODULES_EXTRA=' \
     zip \
     xsl \
     '
+
+ENV PHP_MODULE_CUSTOM_REALPATH_TURBO_VER='2.0.0'
 
 ## disabled modules
 # calendar
@@ -142,15 +144,30 @@ ENV APP_BUILD_DEPS=' \
     '
 
 # install php modules
-RUN set -ex && \
+RUN set -xe && \
 : "---------- install build packages ----------" && \
   savedAptMark="$(apt-mark showmanual)" && \
   apt-get update && \
   apt-get install -y --no-install-recommends \
    ${APP_BUILD_DEPS} \
   && \
+  : "---------- install custom php modules ----------" && \
+  : "--- install custom php module: realpath_turbo ---" && \
+  cd /usr/src && \
+  mkdir -p realpath_turbo && \
+  curl -fSL --connect-timeout 15 https://github.com/Whissi/realpath_turbo/releases/download/v${PHP_MODULE_CUSTOM_REALPATH_TURBO_VER}/realpath_turbo-${PHP_MODULE_CUSTOM_REALPATH_TURBO_VER}.tar.bz2 | tar jx --strip 1 -C realpath_turbo  && \
+  cd realpath_turbo && \
+  phpize && \
+  ./configure --prefix=/usr/local && \
+  make && \
+  #make test NO_INTERACTION=1 && \
+  make install && \
+  \
   : "---------- install pecl php modules ----------" && \
-  pecl install ${PHP_MODULES_PECL} && \
+  for PHP_MODULE_PECL in ${PHP_MODULES_PECL}; do \
+    : "--- install pecl php module: ${PHP_MODULE_PECL} ---" && \
+    pecl install ${PHP_MODULE_PECL} \
+  ; done && \
   \
   : "---------- install extra php modules ----------" && \
   : "--- install module: gd ---" && \
@@ -181,7 +198,7 @@ RUN set -ex && \
   && \
   : "---------- removing apt cache and unneeded packages ----------" && \
   apt-get purge --auto-remove -o APT::AutoRemove::RecommendsImportant=false -y && \
-  rm -rf /var/lib/apt/lists/* /tmp/* && \
+  rm -rf /var/lib/apt/lists/* /tmp/* /usr/src/* && \
   # update pecl channel definitions https://github.com/docker-library/php/issues/443
   pecl update-channels && \
   rm -rf /tmp/pear ~/.pearrc \
