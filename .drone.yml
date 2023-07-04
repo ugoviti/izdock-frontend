@@ -5,7 +5,7 @@ kind: pipeline
 name: frontend-8.2
 
 environment:
-  APP_VER: 8.2.1
+  APP_VER: 8.2.7
 
 trigger:
   event:
