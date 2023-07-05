@@ -68,6 +68,7 @@ ENV PHP_MODULES_EXTRA=' \
     sysvshm \
     zip \
     xsl \
+    gmp \
     '
 
 
@@ -115,6 +116,7 @@ ENV APP_INSTALL_DEPS=' \
     git \
     apache2 \
     nginx \
+    libgmpxx4ldbl \
     '
 
 RUN set -xe && \
@@ -149,6 +151,7 @@ ENV APP_BUILD_DEPS=' \
     libtidy-dev \
     libzip-dev \
     libxslt-dev \
+    libgmp-dev \
     '
 
 # install php modules
