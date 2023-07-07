@@ -351,9 +351,12 @@ runHooks() {
     echo "---> INFO: creating php-fpm system users:"
     for PHP_USER in $(echo $PHP_USERS); do
       usr="$(echo $PHP_USER | awk -F":" '{print $1}')"
+      # trim username to max 32 chars to avoid limits and errors like: `useradd: invalid user name`
+      usr="${usr:0:32}"
       uid="$(echo $PHP_USER | awk -F":" '{print $2}')"
       gid="$(echo $PHP_USER | awk -F":" '{print $3}')"
       home="$(echo $PHP_USER | awk -F":" '{print $4}')"
+
       echo "---> useradd -r -M -d \"$home\" -s \"/bin/false\" -u \"$uid\" -g \"$gid\" \"$usr\""
       useradd -r -M -d "$home" -s "/bin/false" -u "$uid" -g "$gid" "$usr"
     done
