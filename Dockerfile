@@ -118,6 +118,7 @@ ENV APP_INSTALL_DEPS=' \
     nginx \
     libgmpxx4ldbl \
     libapache2-mod-security2 \
+    libapache2-mod-evasive \
     '
 
 RUN set -xe && \
