@@ -125,9 +125,9 @@ RUN set -xe && \
   # upgrade the system
   apt-get update && \
   apt-get upgrade -y && \
-  apt-get install -y --no-install-recommends \
-  ${APP_INSTALL_DEPS} \
-  && \
+  apt-get install -y --no-install-recommends ${APP_INSTALL_DEPS} && \
+  # by default disable these modules:
+  a2dismod security2 evasive && \
   #if [ "${WEBSERVER}" = "apache" ]; then apt-get install -y --no-install-recommends apache2 ;fi && \
   #if [ "${WEBSERVER}" = "nginx" ]; then apt-get install -y --no-install-recommends nginx ;fi && \
   \
