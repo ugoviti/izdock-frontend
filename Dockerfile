@@ -1,5 +1,5 @@
 ## https://www.php.net/downloads
-ARG APP_VER=8.2.7
+ARG APP_VER=8.2.20
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
 FROM ${IMAGE_FROM}
@@ -39,14 +39,14 @@ ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
 
 ## php custom modules
 
-# https://github.com/Whissi/realpath_turbo
+# https://github.com/Whissi/realpath_turbo/tags
 ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
 
 # https://github.com/xdebug/xdebug/tags
-ENV PHP_MODULE_XDEBUG_VER='3.2.1'
+ENV PHP_MODULE_XDEBUG_VER='3.3.2'
 
 # https://github.com/phpredis/phpredis/tags
-ENV PHP_MODULE_REDIS_VER='5.3.7'
+ENV PHP_MODULE_REDIS_VER='6.0.2'
 
 # https://github.com/php-memcached-dev/php-memcached/tags
 ENV PHP_MODULE_MEMCACHED_VER='3.2.0'
@@ -117,6 +117,7 @@ ENV APP_INSTALL_DEPS=' \
     apache2 \
     nginx \
     libgmpxx4ldbl \
+    libapache2-mod-security2 \
     '
 
 RUN set -xe && \

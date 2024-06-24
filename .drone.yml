@@ -5,7 +5,7 @@ kind: pipeline
 name: frontend-8.2
 
 environment:
-  APP_VER: 8.2.7
+  APP_VER: 8.2.20
 
 trigger:
   event:
@@ -90,6 +90,7 @@ kind: pipeline
 name: frontend-7.4
 
 environment:
+  # https://www.php.net/releases/
   APP_VER: 7.4.33
 
 trigger:
