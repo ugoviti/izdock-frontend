@@ -178,7 +178,7 @@ trigger:
   event:
   - push
   branch:
-  - main
+  - main56
 
 platform:
   os: linux
