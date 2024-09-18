@@ -2,7 +2,7 @@
 ## https://www.php.net/downloads
 
 kind: pipeline
-name: frontend-8.2
+name: frontend-8.3
 
 environment:
   APP_VER: 8.3.11
