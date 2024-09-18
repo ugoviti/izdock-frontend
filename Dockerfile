@@ -1,5 +1,5 @@
 ## https://www.php.net/downloads
-ARG APP_VER=8.2.20
+ARG APP_VER=8.3.11
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
 FROM ${IMAGE_FROM}
@@ -40,7 +40,7 @@ ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
 ## php custom modules
 
 # https://github.com/Whissi/realpath_turbo/tags
-ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
+#ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
 
 # https://github.com/xdebug/xdebug/tags
 ENV PHP_MODULE_XDEBUG_VER='3.3.2'
@@ -165,16 +165,16 @@ RUN set -xe && \
    ${APP_BUILD_DEPS} \
   && \
   : "---------- install custom php modules ----------" && \
-  : "--- install custom php module: realpath_turbo ---" && \
-  cd /usr/src && \
-  mkdir -p realpath_turbo && \
-  curl -fSL --connect-timeout 15 https://github.com/Whissi/realpath_turbo/releases/download/v${PHP_MODULE_REALPATH_TURBO_VER}/realpath_turbo-${PHP_MODULE_REALPATH_TURBO_VER}.tar.bz2 | tar jx --strip 1 -C realpath_turbo  && \
-  cd realpath_turbo && \
-  phpize && \
-  ./configure --prefix=/usr/local && \
-  make && \
-  #make test NO_INTERACTION=1 && \
-  make install && \
+#   : "--- install custom php module: realpath_turbo ---" && \
+#   cd /usr/src && \
+#   mkdir -p realpath_turbo && \
+#   curl -fSL --connect-timeout 15 https://github.com/Whissi/realpath_turbo/releases/download/v${PHP_MODULE_REALPATH_TURBO_VER}/realpath_turbo-${PHP_MODULE_REALPATH_TURBO_VER}.tar.bz2 | tar jx --strip 1 -C realpath_turbo  && \
+#   cd realpath_turbo && \
+#   phpize && \
+#   ./configure --prefix=/usr/local && \
+#   make && \
+#   #make test NO_INTERACTION=1 && \
+#   make install && \
   \
   : "--- install custom php module: redis ---" && \
   pecl install redis-${PHP_MODULE_REDIS_VER} && \
