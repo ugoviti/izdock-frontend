@@ -59,7 +59,6 @@ ENV PHP_MODULES_EXTRA=' \
     gd \
     mysqli \
     opcache \
-    pdo_mysql \
     pcntl \
     soap \
     sockets \
@@ -69,7 +68,9 @@ ENV PHP_MODULES_EXTRA=' \
     zip \
     xsl \
     gmp \
-    pgsql \
+    pdo_mysql \
+    pdo_pgsql \
+    pdo_sqlite \
     '
 
 
@@ -156,6 +157,7 @@ ENV APP_BUILD_DEPS=' \
     libxslt-dev \
     libgmp-dev \
     libpq-dev \
+    libsqlite3-dev \
     '
 
 # install php modules
