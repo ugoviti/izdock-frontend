@@ -69,6 +69,7 @@ ENV PHP_MODULES_EXTRA=' \
     zip \
     xsl \
     gmp \
+    pgsql \
     '
 
 
@@ -154,6 +155,7 @@ ENV APP_BUILD_DEPS=' \
     libzip-dev \
     libxslt-dev \
     libgmp-dev \
+    libpq-dev \
     '
 
 # install php modules
