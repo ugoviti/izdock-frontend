@@ -1,5 +1,5 @@
 ## https://www.php.net/downloads
-ARG APP_VER=8.3.11
+ARG APP_VER=8.3.14
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
 FROM ${IMAGE_FROM}
@@ -43,13 +43,13 @@ ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
 #ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
 
 # https://github.com/xdebug/xdebug/tags
-ENV PHP_MODULE_XDEBUG_VER='3.3.2'
+ENV PHP_MODULE_XDEBUG_VER='3.4.0'
 
 # https://github.com/phpredis/phpredis/tags
-ENV PHP_MODULE_REDIS_VER='6.0.2'
+ENV PHP_MODULE_REDIS_VER='6.1.0'
 
 # https://github.com/php-memcached-dev/php-memcached/tags
-ENV PHP_MODULE_MEMCACHED_VER='3.2.0'
+ENV PHP_MODULE_MEMCACHED_VER='3.3.0'
 
 
 ENV PHP_MODULES_EXTRA=' \
