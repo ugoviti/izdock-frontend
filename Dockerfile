@@ -254,9 +254,9 @@ EXPOSE \
   ${APP_PORT_HTTPS}/tcp
 
 # add files to container
-ADD Dockerfile /
-ADD README.md /
-ADD filesystem/* /
+COPY Dockerfile /
+COPY README.md /
+COPY filesystem/ /
 
 # container pre-entrypoint variables
 ENV APP_RUNAS          ""
