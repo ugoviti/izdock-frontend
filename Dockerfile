@@ -1,10 +1,10 @@
 ## https://www.php.net/downloads
-ARG APP_VER=8.3.14
+ARG APP_VER=8.4.3
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
 FROM ${IMAGE_FROM}
 
-MAINTAINER Ugo Viti <ugo.viti@initzero.it>
+LABEL maintainer="Ugo Viti <u.viti@wearequantico.it>"
 
 ## app name
 ENV APP_NAME        "frontend"
@@ -43,7 +43,7 @@ ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
 #ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
 
 # https://github.com/xdebug/xdebug/tags
-ENV PHP_MODULE_XDEBUG_VER='3.4.0'
+ENV PHP_MODULE_XDEBUG_VER='3.4.1'
 
 # https://github.com/phpredis/phpredis/tags
 ENV PHP_MODULE_REDIS_VER='6.1.0'
@@ -251,7 +251,7 @@ EXPOSE \
   ${APP_PORT_HTTPS}/tcp
 
 # add files to container
-ADD Dockerfile filesystem README.md /
+ADD filesystem/* Dockerfile README.md /
 
 # container pre-entrypoint variables
 ENV APP_RUNAS          ""
