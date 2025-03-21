@@ -1,7 +1,7 @@
 ## https://www.php.net/downloads
-## https://hub.docker.com/_/php
 ## https://github.com/docker-library/docs/blob/master/php/README.md#supported-tags-and-respective-dockerfile-links
-ARG APP_VER=8.4.3
+## https://hub.docker.com/_/php
+ARG APP_VER=8.4.5
 #ARG IMAGE_FROM=php:${APP_VER}-fpm-bookworm
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
