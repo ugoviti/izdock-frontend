@@ -1,7 +1,7 @@
 ## https://www.php.net/downloads
 ## https://github.com/docker-library/docs/blob/master/php/README.md#supported-tags-and-respective-dockerfile-links
 ## https://hub.docker.com/_/php
-ARG APP_VER=8.4.5
+ARG APP_VER=8.4.6
 #ARG IMAGE_FROM=php:${APP_VER}-fpm-bookworm
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
@@ -46,10 +46,10 @@ ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
 #ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
 
 # https://github.com/xdebug/xdebug/tags
-ENV PHP_MODULE_XDEBUG_VER='3.4.1'
+ENV PHP_MODULE_XDEBUG_VER='3.4.2'
 
 # https://github.com/phpredis/phpredis/tags
-ENV PHP_MODULE_REDIS_VER='6.1.0'
+ENV PHP_MODULE_REDIS_VER='6.2.0'
 
 # https://github.com/php-memcached-dev/php-memcached/tags
 ENV PHP_MODULE_MEMCACHED_VER='3.3.0'
