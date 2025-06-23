@@ -2,8 +2,8 @@
 ## https://github.com/docker-library/docs/blob/master/php/README.md#supported-tags-and-respective-dockerfile-links
 ## https://hub.docker.com/_/php
 ARG APP_VER=8.4.8
-ARG IMAGE_FROM=php:${APP_VER}-fpm-bookworm
-#ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
+#ARG IMAGE_FROM=php:${APP_VER}-fpm-bookworm
+ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
 FROM ${IMAGE_FROM}
 
