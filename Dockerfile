@@ -1,7 +1,7 @@
 ## https://www.php.net/downloads
 ## https://github.com/docker-library/docs/blob/master/php/README.md#supported-tags-and-respective-dockerfile-links
 ## https://hub.docker.com/_/php
-ARG APP_VER=8.4.8
+ARG APP_VER=8.4.10
 #ARG IMAGE_FROM=php:${APP_VER}-fpm-bookworm
 ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
 
@@ -28,34 +28,34 @@ ENV APP_USR         "www-data"
 ENV APP_GRP         "www-data"
 
 # development debug mode (keep apt cache and source files)
-ARG APP_DEBUG=0
-ENV APP_DEBUG=$APP_DEBUG
+ARG APP_DEBUG 0
+ENV APP_DEBUG $APP_DEBUG
 
 ## default variables
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND noninteractive
 
-ENV PREFIX=/usr/local
-ENV HTTPD_PREFIX=/etc/apache2
-ENV PHP_PREFIX=${PREFIX}
-ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
+ENV PREFIX /usr/local
+ENV HTTPD_PREFIX /etc/apache2
+ENV PHP_PREFIX ${PREFIX}
+ENV PHP_INI_DIR ${PHP_PREFIX}/etc/php
 
 
 ## php custom modules
 
 # https://github.com/Whissi/realpath_turbo/tags
-#ENV PHP_MODULE_REALPATH_TURBO_VER='2.0.0'
+#ENV PHP_MODULE_REALPATH_TURBO_VER '2.0.0'
 
 # https://github.com/xdebug/xdebug/tags
-ENV PHP_MODULE_XDEBUG_VER='3.4.4'
+ENV PHP_MODULE_XDEBUG_VER '3.4.4'
 
 # https://github.com/phpredis/phpredis/tags
-ENV PHP_MODULE_REDIS_VER='6.2.0'
+ENV PHP_MODULE_REDIS_VER '6.2.0'
 
 # https://github.com/php-memcached-dev/php-memcached/tags
-ENV PHP_MODULE_MEMCACHED_VER='3.3.0'
+ENV PHP_MODULE_MEMCACHED_VER '3.3.0'
 
 
-ENV PHP_MODULES_EXTRA=' \
+ENV PHP_MODULES_EXTRA ' \
     bz2 \
     bcmath \
     exif \
@@ -74,6 +74,7 @@ ENV PHP_MODULES_EXTRA=' \
     pdo_mysql \
     pdo_pgsql \
     pdo_sqlite \
+    pdo_odbc \
     '
 
 
@@ -89,14 +90,14 @@ ENV PHP_MODULES_EXTRA=' \
 # xsl
 
 # php modules enabled/disabled by default
-ENV PHP_MODULES_ENABLED=
-ENV PHP_MODULES_DISABLED=
+#ENV PHP_MODULES_ENABLED
+#ENV PHP_MODULES_DISABLED
 
 # apache vars
-ENV DOCUMENTROOT=/var/www/html
+ENV DOCUMENTROOT /var/www/html
 
 ## install packages
-ENV APP_INSTALL_DEPS=' \
+ENV APP_INSTALL_DEPS ' \
     tini \
     runit \
     rsync \
@@ -124,6 +125,8 @@ ENV APP_INSTALL_DEPS=' \
     libgmpxx4ldbl \
     libapache2-mod-security2 \
     libapache2-mod-evasive \
+    gnupg \
+    apt-transport-https \
     '
 
 RUN set -xe && \
@@ -131,8 +134,17 @@ RUN set -xe && \
   apt-get update && \
   apt-get upgrade -y && \
   apt-get install -y --no-install-recommends ${APP_INSTALL_DEPS} && \
+  curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+  curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+  apt-get update && ACCEPT_EULA=Y apt-get install -y --no-install-recommends \
+  msodbcsql18 \
+  mssql-tools18 \
+  && \
+  echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> /etc/profile && \
+  ln -s /opt/mssql-tools18/bin/* /usr/local/bin/ && \
   # by default disable these modules:
   a2dismod security2 evasive && \
+  \
   #if [ "${WEBSERVER}" = "apache" ]; then apt-get install -y --no-install-recommends apache2 ;fi && \
   #if [ "${WEBSERVER}" = "nginx" ]; then apt-get install -y --no-install-recommends nginx ;fi && \
   \
@@ -146,7 +158,7 @@ RUN set -xe && \
   ;fi
 
   
-ENV APP_BUILD_DEPS=' \
+ENV APP_BUILD_DEPS ' \
     libmemcached-dev \
     zlib1g-dev \
     libbz2-dev \
@@ -161,6 +173,7 @@ ENV APP_BUILD_DEPS=' \
     libgmp-dev \
     libpq-dev \
     libsqlite3-dev \
+    unixodbc-dev \
     '
 
 # install php modules
@@ -202,6 +215,9 @@ RUN set -xe && \
   if [ $APP_VER \< 7.4.0 ]; then docker-php-ext-configure gd --with-jpeg-dir ;fi && \
   if [ $APP_VER \> 7.4.0 ]; then docker-php-ext-configure gd --with-freetype --with-jpeg ;fi && \
   \
+  : "--- install module: pdo_odbc ---" && \
+  find /usr/lib /usr/lib/x86_64-linux-gnu -name '*.la' -delete && \
+  if [ $APP_VER \> 7.4.0 ]; then docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC ;fi && \
   : "--- install modules: ${PHP_MODULES_EXTRA} ---" && \
   docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
   \

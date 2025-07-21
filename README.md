@@ -107,7 +107,7 @@ Then, run the commands to build and run the Docker image:
 
 ```console
 $ docker build --pull --rm --build-arg APP_VER=8.2.1 -t frontend:8.2.1 .
-$ docker run --rm -it -e PHPFPM_ENABLED=false -e ENTRYPOINT_TINI=false -p 8080:80 --name frontend frontend:8.2.1
+$ docker run --rm -it -e PHPFPM_ENABLED=false -e ENTRYPOINT_TINI=false -p 8080:80 --name frontend izdock/frontend:8.4.8
 $ docker exec -it frontend bash
 ```
 
