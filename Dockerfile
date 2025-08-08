@@ -222,15 +222,14 @@ RUN set -xe && \
   if [ $APP_VER \> 8.0.0 ]; then \
   : "--- install module: pdo_odbc ---" && \
   find /usr/lib /usr/lib/x86_64-linux-gnu -name '*.la' -delete && \
-  docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC \
+  docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC && \
+  : "--- install modules php8: ${PHP8_MODULES_EXTRA} ---" && \
+  docker-php-ext-install -j$(nproc) ${PHP8_MODULES_EXTRA} \
   ;fi && \
+  \
   : "--- install modules: ${PHP_MODULES_EXTRA} ---" && \
   docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
   \
-  if [ $APP_VER \> 8.0.0 ]; then \
-  : "--- install modules php8: ${PHP_MODULES_EXTRA} ---" && \
-  docker-php-ext-install -j$(nproc) ${PHP8_MODULES_EXTRA}\
-  ;fi && \
   : "--- enable modules: ${PHP_MODULES_ENABLED} ---" && \
   if [ ! -z "${PHP_MODULES_ENABLED}" ]; then docker-php-ext-enable ${PHP_MODULES_ENABLED} ;fi && \
   \
