@@ -219,7 +219,7 @@ RUN set -xe && \
   \
   : "--- install module: pdo_odbc ---" && \
   find /usr/lib /usr/lib/x86_64-linux-gnu -name '*.la' -delete && \
-  if [ $APP_VER \> 7.4.0 ]; then docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC ;fi && \
+  if [ $APP_VER \> 8.0.0 ]; then docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC ;fi && \
   : "--- install modules: ${PHP_MODULES_EXTRA} ---" && \
   docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
   \
