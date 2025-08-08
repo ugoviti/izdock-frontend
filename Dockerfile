@@ -74,9 +74,11 @@ ENV PHP_MODULES_EXTRA ' \
     pdo_mysql \
     pdo_pgsql \
     pdo_sqlite \
-    pdo_odbc \
     '
 
+ENV PHP8_MODULES_EXTRA ' \
+    pdo_odbc \
+    '
 
 ## disabled modules
 # calendar
@@ -225,6 +227,10 @@ RUN set -xe && \
   : "--- install modules: ${PHP_MODULES_EXTRA} ---" && \
   docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
   \
+  if [ $APP_VER \> 8.0.0 ]; then \
+  : "--- install modules php8: ${PHP_MODULES_EXTRA} ---" && \
+  docker-php-ext-install -j$(nproc) ${PHP8_MODULES_EXTRA}\
+  ;fi && \
   : "--- enable modules: ${PHP_MODULES_ENABLED} ---" && \
   if [ ! -z "${PHP_MODULES_ENABLED}" ]; then docker-php-ext-enable ${PHP_MODULES_ENABLED} ;fi && \
   \
