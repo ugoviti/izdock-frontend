@@ -126,6 +126,7 @@ ENV APP_INSTALL_DEPS ' \
     libapache2-mod-security2 \
     libapache2-mod-evasive \
     gnupg \
+    openssh-client \
     sshpass \
     apt-transport-https \
     '
