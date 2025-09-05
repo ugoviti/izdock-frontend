@@ -131,6 +131,7 @@ ENV APP_INSTALL_DEPS ' \
     openssh-client \
     sshpass \
     apt-transport-https \
+    ssh \
     '
 
 RUN set -xe && \
