@@ -35,24 +35,21 @@ variable "APP_BUILD_COMMIT" { default = "" }
 variable "APP_BUILD_DATE"   { default = "" }
 
 ## ---------------------------------------------------------------------------------------
-## tag scheme
-##   every variant:    8.4.27-trixie  8.4-trixie  8.4.27-trixie-<commit>  8.4.27-trixie-<build>
-##   default distro:   8.4.27  8.4  8.4.27-<commit>  8.4.27-<build>  (same tags used by Drone)
-##   default of major: 8-trixie  8
-##   latest:           latest
+## tag scheme (same as the old Drone pipelines)
+##   every variant:     8.4.27-<commit>  8.4.27-<build>  8.4.27  8.4
+##   default of major:  8
+##   latest:            latest
 ## ---------------------------------------------------------------------------------------
 function "tags" {
-  params = [version, distro, is_default, is_major_default, is_latest]
+  params = [version, is_major_default, is_latest]
   result = flatten([
-    for image in split(",", IMAGES) : flatten([
-      for suffix in concat(["-${distro}"], is_default ? [""] : []) : concat(
-        ["${image}:${version}${suffix}", "${image}:${minor(version)}${suffix}"],
-        APP_BUILD_COMMIT != "" ? ["${image}:${version}${suffix}-${APP_BUILD_COMMIT}"] : [],
-        APP_VER_BUILD != "" ? ["${image}:${version}${suffix}-${APP_VER_BUILD}"] : [],
-        is_major_default ? ["${image}:${major(version)}${suffix}"] : [],
-        is_latest && suffix == "" ? ["${image}:latest"] : [],
-      )
-    ])
+    for image in split(",", IMAGES) : concat(
+      APP_BUILD_COMMIT != "" ? ["${image}:${version}-${APP_BUILD_COMMIT}"] : [],
+      APP_VER_BUILD != "" ? ["${image}:${version}-${APP_VER_BUILD}"] : [],
+      ["${image}:${version}", "${image}:${minor(version)}"],
+      is_major_default ? ["${image}:${major(version)}"] : [],
+      is_latest ? ["${image}:latest"] : [],
+    )
   ])
 }
 
@@ -99,7 +96,7 @@ target "php85-trixie" {
     DEBIAN_RELEASE = "trixie"
   }
   labels = { "org.opencontainers.image.version" = PHP85_VERSION }
-  tags   = tags(PHP85_VERSION, "trixie", true, true, true)
+  tags   = tags(PHP85_VERSION, true, true)
 }
 
 target "php84-trixie" {
@@ -109,7 +106,7 @@ target "php84-trixie" {
     DEBIAN_RELEASE = "trixie"
   }
   labels = { "org.opencontainers.image.version" = PHP84_VERSION }
-  tags   = tags(PHP84_VERSION, "trixie", true, false, false)
+  tags   = tags(PHP84_VERSION, false, false)
 }
 
 ## PHP 7.4 base image: official docker-library Dockerfile + PHP2Shell backport (php74/)
@@ -131,5 +128,5 @@ target "php74-bullseye" {
     PHP_MODULES_EXCLUDE   = "pdo_odbc"
   }
   labels = { "org.opencontainers.image.version" = PHP74_VERSION }
-  tags   = tags(PHP74_VERSION, "bullseye", true, true, false)
+  tags   = tags(PHP74_VERSION, true, false)
 }

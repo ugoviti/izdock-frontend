@@ -4,13 +4,12 @@ Production ready Apache / NGINX Web Server + PHP-FPM + izsendmail for MTA sendin
 # Supported tags
 | PHP | Debian | Tags |
 |---|---|---|
-| 8.5 | trixie | `8.5.X-trixie`, `8.5-trixie`, `8-trixie`, `8.5.X`, `8.5`, `8`, `latest` |
-| 8.4 | trixie | `8.4.X-trixie`, `8.4-trixie`, `8.4.X`, `8.4` |
-| 7.4 (EOL, patched) | bullseye | `7.4.33-bullseye`, `7.4-bullseye`, `7-bullseye`, `7.4.33`, `7.4`, `7` |
+| 8.5 | trixie | `8.5.X-COMMIT`, `8.5.X-BUILD`, `8.5.X`, `8.5`, `8`, `latest` |
+| 8.4 | trixie | `8.4.X-COMMIT`, `8.4.X-BUILD`, `8.4.X`, `8.4` |
+| 7.4 (EOL, patched) | bullseye | `7.4.33-COMMIT`, `7.4.33-BUILD`, `7.4.33`, `7.4`, `7` |
 
-Every version tag also exists with the **COMMIT** (GIT commit ID) and **BUILD** (CI build number) suffix,
-e.g. `8.5.X-trixie-COMMIT`, `8.5.X-BUILD`. **X** is the PHP patch version (look into the project
-[Tags](https://hub.docker.com/r/izdock/frontend/tags) page to discover the latest versions).
+Where **X** is the patch version number, **COMMIT** is the GIT commit ID, and **BUILD** is the build number
+(look into project [Tags](https://hub.docker.com/r/izdock/frontend/tags) page to discover the latest versions).
 
 Images are published on Docker Hub (`izdock/frontend`) and on the internal Gitea registry
 (`git.quantico.srl/initzero/izdock-frontend`).
@@ -23,7 +22,7 @@ per-variant overrides and the tag scheme.
 docker buildx bake --print            # resolved configuration and tags
 docker buildx bake php85-trixie       # build one variant
 docker buildx bake                    # build every variant
-scripts/smoke-test.sh izdock/frontend:8.5.X-trixie
+scripts/smoke-test.sh izdock/frontend:8.5
 ```
 
 CI (Gitea Actions, `.gitea/workflows/`):
