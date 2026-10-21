@@ -2,17 +2,47 @@
 Production ready Apache / NGINX Web Server + PHP-FPM + izsendmail for MTA sending and logging
 
 # Supported tags
-* `8.4.X-COMMIT`, `8.4.X-BUILD`, `8.4.X`, `8.4`, `8`, `latest`
-* `7.4.X-COMMIT`, `7.4.X-BUILD`, `7.4.X`, `7.4`, `7`
+| PHP | Debian | Tags |
+|---|---|---|
+| 8.5 | trixie | `8.5.X-trixie`, `8.5-trixie`, `8-trixie`, `8.5.X`, `8.5`, `8`, `latest` |
+| 8.4 | trixie | `8.4.X-trixie`, `8.4-trixie`, `8.4.X`, `8.4` |
+| 7.4 (EOL, patched) | bullseye | `7.4.33-bullseye`, `7.4-bullseye`, `7-bullseye`, `7.4.33`, `7.4`, `7` |
 
-Where **X** is the patch version number, **COMMIT** is the GIT commit ID, and **BUILD** is the build number (look into project [Tags](https://hub.docker.com/r/izdock/izpbx-frontend/tags) page to discover the latest versions) 
+Every version tag also exists with the **COMMIT** (GIT commit ID) and **BUILD** (CI build number) suffix,
+e.g. `8.5.X-trixie-COMMIT`, `8.5.X-BUILD`. **X** is the PHP patch version (look into the project
+[Tags](https://hub.docker.com/r/izdock/frontend/tags) page to discover the latest versions).
+
+Images are published on Docker Hub (`izdock/frontend`) and on the internal Gitea registry
+(`git.quantico.srl/initzero/izdock-frontend`).
+
+# Build
+All variants are built from the same `Dockerfile`; `docker-bake.hcl` holds the versions, the
+per-variant overrides and the tag scheme.
+
+```
+docker buildx bake --print            # resolved configuration and tags
+docker buildx bake php85-trixie       # build one variant
+docker buildx bake                    # build every variant
+scripts/smoke-test.sh izdock/frontend:8.5.X-trixie
+```
+
+CI (Gitea Actions, `.gitea/workflows/`):
+- `build.yml`: on every push to `main`, weekly and on demand builds every variant, runs the smoke test and pushes to both registries
+- `update-versions.yml`: every night bumps the versions marked `# auto:` in `docker-bake.hcl` to the latest PHP patch releases and PECL modules and commits them, which triggers a build
+
+## PHP 7.4 (end of life)
+PHP 7.4 no longer receives official updates. The 7.4 images are built on a base image compiled from `php74/`:
+the upstream docker-library `7.4/bullseye/fpm` Dockerfile plus the minimal backport published by the PHP security team
+for **CVE-2026-109618** and **CVE-2026-109619** (PHP2Shell, php-src commit `712e60f9ed`).
+Debian 11 (bullseye) is EOL too and its packages come from `archive.debian.org` (no more security updates).
+Plan the migration to PHP 8.4 or 8.5.
 
 # Dockerfile
-- https://github.com/ugoviti/izdock-frontend/blob/master/Dockerfile
+- https://git.quantico.srl/initzero/izdock-frontend/src/branch/main/Dockerfile
 
 # Features
 - Small image footprint
-- Based on official [php](/_/php/) and [Debian Buster-Slim](/_/debian/) image
+- Based on official [php](/_/php/) image on Debian Trixie (PHP 8.x) or Debian Bullseye (PHP 7.4)
 - OnDemand configurable Web Server via `WEBSERVER` ENV (apache or nginx)
 - OnDemand configurable Apache MPM Worker (use **event** or **worker** for best scalability and memory optimization, PHP get automatically disabled because is not ZTS compiled). The default Apache MPM Worker is **event** (if prefork is used, php-fpm will be disabled because it's incompatible)
 - Included izsendmail bash script as wrapper for `msmtp` used for smarthost delivery of mail messages sent from PHP scripts using sendmail() function
@@ -107,7 +137,7 @@ Then, run the commands to build and run the Docker image:
 
 ```console
 $ docker build --pull --rm --build-arg APP_VER=8.2.1 -t frontend:8.2.1 .
-$ docker run --rm -it -e PHPFPM_ENABLED=false -e ENTRYPOINT_TINI=false -p 8080:80 --name frontend izdock/frontend:8.4.8
+$ docker run --rm -it -e PHPFPM_ENABLED=false -e ENTRYPOINT_TINI=false -p 8080:80 --name frontend izdock/frontend:8.5
 $ docker exec -it frontend bash
 ```
 

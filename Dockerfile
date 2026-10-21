@@ -1,61 +1,68 @@
+## Single Dockerfile for every variant: the per-variant overrides (PHP version, Debian
+## release, base image, a few module settings) live in docker-bake.hcl, versions in versions.hcl.
 ## https://www.php.net/downloads
-## https://github.com/docker-library/docs/blob/master/php/README.md#supported-tags-and-respective-dockerfile-links
 ## https://hub.docker.com/_/php
-ARG APP_VER=8.4.10
-#ARG IMAGE_FROM=php:${APP_VER}-fpm-bookworm
-ARG IMAGE_FROM=php:${APP_VER}-fpm-bullseye
+## PHP 7.4 is EOL: its base image is built from php74/ (official backport for CVE-2026-109618/109619)
+ARG APP_VER=8.5.12
+ARG DEBIAN_RELEASE=trixie
+ARG IMAGE_FROM=php:${APP_VER}-fpm-${DEBIAN_RELEASE}
 
 FROM ${IMAGE_FROM}
 
 LABEL maintainer="Ugo Viti <u.viti@wearequantico.it>"
 
 ## app name
-ENV APP_NAME        "frontend"
-ENV APP_DESCRIPTION "PHP-FPM + Apache / NGINX Web Server"
+ENV APP_NAME="frontend"
+ENV APP_DESCRIPTION="PHP-FPM + Apache / NGINX Web Server"
 
 # full app version
 ARG APP_VER
 ENV APP_VER=${APP_VER}
 
 ## app ports
-ENV APP_PORT_HTTP   80
-ENV APP_PORT_HTTPS  443
+ENV APP_PORT_HTTP=80
+ENV APP_PORT_HTTPS=443
 
 ## app users
-ENV APP_UID         33
-ENV APP_GID         33
-ENV APP_USR         "www-data"
-ENV APP_GRP         "www-data"
+ENV APP_UID=33
+ENV APP_GID=33
+ENV APP_USR="www-data"
+ENV APP_GRP="www-data"
 
 # development debug mode (keep apt cache and source files)
-ARG APP_DEBUG 0
-ENV APP_DEBUG $APP_DEBUG
+ARG APP_DEBUG=0
+ENV APP_DEBUG=$APP_DEBUG
 
 ## default variables
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
-ENV PREFIX /usr/local
-ENV HTTPD_PREFIX /etc/apache2
-ENV PHP_PREFIX ${PREFIX}
-ENV PHP_INI_DIR ${PHP_PREFIX}/etc/php
+ENV PREFIX=/usr/local
+ENV HTTPD_PREFIX=/etc/apache2
+ENV PHP_PREFIX=${PREFIX}
+ENV PHP_INI_DIR=${PHP_PREFIX}/etc/php
 
 
-## php custom modules
+## php custom modules (pecl): defaults here, overridden per variant by docker-bake.hcl
 
 # https://github.com/Whissi/realpath_turbo/tags
 #ENV PHP_MODULE_REALPATH_TURBO_VER '2.0.0'
 
-# https://github.com/xdebug/xdebug/tags
-ENV PHP_MODULE_XDEBUG_VER '3.4.4'
+# https://pecl.php.net/package/xdebug
+ARG PHP_MODULE_XDEBUG_VER=3.5.3
+ENV PHP_MODULE_XDEBUG_VER=${PHP_MODULE_XDEBUG_VER}
 
-# https://github.com/phpredis/phpredis/tags
-ENV PHP_MODULE_REDIS_VER '6.2.0'
+# https://pecl.php.net/package/redis
+ARG PHP_MODULE_REDIS_VER=6.3.0
+ENV PHP_MODULE_REDIS_VER=${PHP_MODULE_REDIS_VER}
 
-# https://github.com/php-memcached-dev/php-memcached/tags
-ENV PHP_MODULE_MEMCACHED_VER '3.3.0'
+# https://pecl.php.net/package/memcached
+ARG PHP_MODULE_MEMCACHED_VER=3.4.0
+ENV PHP_MODULE_MEMCACHED_VER=${PHP_MODULE_MEMCACHED_VER}
 
+## bundled php modules to compile
+## modules already built into the base image (e.g. opcache on PHP >= 8.5) are skipped automatically
 
-ENV PHP_MODULES_EXTRA ' \
+ENV PHP_MODULES_EXTRA=' \
     bz2 \
     bcmath \
     exif \
@@ -74,11 +81,11 @@ ENV PHP_MODULES_EXTRA ' \
     pdo_mysql \
     pdo_pgsql \
     pdo_sqlite \
-    '
-
-ENV PHP8_MODULES_EXTRA ' \
     pdo_odbc \
     '
+
+## modules to leave out on a given variant (e.g. "pdo_odbc" on PHP 7.4)
+ARG PHP_MODULES_EXCLUDE=""
 
 ## disabled modules
 # calendar
@@ -96,10 +103,10 @@ ENV PHP8_MODULES_EXTRA ' \
 #ENV PHP_MODULES_DISABLED
 
 # apache vars
-ENV DOCUMENTROOT /var/www/html
+ENV DOCUMENTROOT=/var/www/html
 
 ## install packages
-ENV APP_INSTALL_DEPS ' \
+ENV APP_INSTALL_DEPS=' \
     tini \
     runit \
     rsync \
@@ -114,7 +121,8 @@ ENV APP_INSTALL_DEPS ' \
     ca-certificates \
     curl \
     file \
-    mime-support \
+    media-types \
+    mailcap \
     msmtp \
     psmisc \
     publicsuffix \
@@ -139,8 +147,11 @@ RUN set -xe && \
   apt-get update && \
   apt-get upgrade -y && \
   apt-get install -y --no-install-recommends ${APP_INSTALL_DEPS} && \
-  curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
-  curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+  : "---------- Microsoft ODBC driver repository (matches the image Debian release) ----------" && \
+  . /etc/os-release && \
+  # microsoft.asc signs the Debian <= 12 repos, microsoft-2025.asc signs the Debian 13 repo
+  { curl -fsSL https://packages.microsoft.com/keys/microsoft.asc; curl -fsSL https://packages.microsoft.com/keys/microsoft-2025.asc; } | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg && \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/${VERSION_ID}/prod ${VERSION_CODENAME} main" > /etc/apt/sources.list.d/mssql-release.list && \
   apt-get update && ACCEPT_EULA=Y apt-get install -y --no-install-recommends \
   msodbcsql18 \
   mssql-tools18 \
@@ -163,7 +174,7 @@ RUN set -xe && \
   ;fi
 
   
-ENV APP_BUILD_DEPS ' \
+ENV APP_BUILD_DEPS=' \
     libmemcached-dev \
     zlib1g-dev \
     libbz2-dev \
@@ -208,28 +219,23 @@ RUN set -xe && \
   pecl install memcached-${PHP_MODULE_MEMCACHED_VER} && \
   \
   : "--- install custom php module: xdebug ---" && \
-  if [ $APP_VER \> 8.0.0 ]; then \
-    pecl install xdebug-${PHP_MODULE_XDEBUG_VER} ; \
-  else \
-    # stuck to 3.1.6 if php 7
-    pecl install xdebug-3.1.6 \
-  ;fi && \
+  pecl install xdebug-${PHP_MODULE_XDEBUG_VER} && \
   \
   : "---------- install extra php modules ----------" && \
-  : "--- install module: gd ---" && \
-  if [ $APP_VER \< 7.4.0 ]; then docker-php-ext-configure gd --with-jpeg-dir ;fi && \
-  if [ $APP_VER \> 7.4.0 ]; then docker-php-ext-configure gd --with-freetype --with-jpeg ;fi && \
-  \
-  if [ $APP_VER \> 8.0.0 ]; then \
-  : "--- install module: pdo_odbc ---" && \
-  find /usr/lib /usr/lib/x86_64-linux-gnu -name '*.la' -delete && \
-  docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC && \
-  : "--- install modules php8: ${PHP8_MODULES_EXTRA} ---" && \
-  docker-php-ext-install -j$(nproc) ${PHP8_MODULES_EXTRA} \
-  ;fi && \
-  \
-  : "--- install modules: ${PHP_MODULES_EXTRA} ---" && \
-  docker-php-ext-install -j$(nproc) ${PHP_MODULES_EXTRA} && \
+  loaded="$(php -m | tr 'A-Z' 'a-z' | sed 's/^zend opcache$/opcache/')" && \
+  modules="" && \
+  for m in ${PHP_MODULES_EXTRA}; do \
+    case " ${PHP_MODULES_EXCLUDE} " in *" $m "*) echo "skip $m: excluded"; continue ;; esac; \
+    if echo "$loaded" | grep -qx "$m"; then echo "skip $m: already built in"; continue; fi; \
+    modules="$modules $m"; \
+  done && \
+  case " $modules " in *" gd "*) docker-php-ext-configure gd --with-freetype --with-jpeg ;; esac && \
+  case " $modules " in *" pdo_odbc "*) \
+    find /usr/lib -name '*.la' -delete && \
+    docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC ;; \
+  esac && \
+  : "--- install modules: $modules ---" && \
+  docker-php-ext-install -j$(nproc) $modules && \
   \
   : "--- enable modules: ${PHP_MODULES_ENABLED} ---" && \
   if [ ! -z "${PHP_MODULES_ENABLED}" ]; then docker-php-ext-enable ${PHP_MODULES_ENABLED} ;fi && \
@@ -242,10 +248,11 @@ RUN set -xe && \
   # remove packages used for build stage
   apt-mark auto '.*' > /dev/null && \
   if [ ! -z "$savedAptMark" ]; then apt-mark manual $savedAptMark ;fi && \
+  # keep the runtime libraries of the compiled extensions (paths made relative so it also works on usrmerged Debian, same as docker-library)
   ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
-    | awk '/=>/ { print $3 }' \
+    | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); printf "*%s\n", so }' \
     | sort -u \
-    | xargs -r dpkg-query -S \
+    | xargs -r dpkg-query --search \
     | cut -d: -f1 \
     | sort -u \
     | xargs -rt apt-mark manual \
@@ -285,16 +292,16 @@ COPY README.md /
 COPY filesystem/ /
 
 # container pre-entrypoint variables
-ENV APP_RUNAS          ""
-ENV MULTISERVICE       ""
-ENV ENTRYPOINT_TINI    ""
-ENV WEBSERVER          "apache"
-ENV WEBSERVER_ENABLED  "true"
-ENV PHP_ENABLED        "true"
-ENV PHPFPM_ENABLED     "${PHP_ENABLED}"
-ENV HTTPD_CONF_FILE    "${HTTPD_PREFIX}/apache2.conf"
-ENV HTTPD_VIRTUAL_FILE "${HTTPD_PREFIX}/sites-available/000-default.conf"
-ENV UMASK              0002
+ENV APP_RUNAS=""
+ENV MULTISERVICE=""
+ENV ENTRYPOINT_TINI=""
+ENV WEBSERVER="apache"
+ENV WEBSERVER_ENABLED="true"
+ENV PHP_ENABLED="true"
+ENV PHPFPM_ENABLED="${PHP_ENABLED}"
+ENV HTTPD_CONF_FILE="${HTTPD_PREFIX}/apache2.conf"
+ENV HTTPD_VIRTUAL_FILE="${HTTPD_PREFIX}/sites-available/000-default.conf"
+ENV UMASK=0002
 
 ## CI args
 ARG APP_VER_BUILD
@@ -302,10 +309,10 @@ ARG APP_BUILD_COMMIT
 ARG APP_BUILD_DATE
 
 # define other build variables
-ENV APP_VER          "${APP_VER}"
-ENV APP_VER_BUILD    "${APP_VER_BUILD}"
-ENV APP_BUILD_COMMIT "${APP_BUILD_COMMIT}"
-ENV APP_BUILD_DATE   "${APP_BUILD_DATE}"
+ENV APP_VER="${APP_VER}"
+ENV APP_VER_BUILD="${APP_VER_BUILD}"
+ENV APP_BUILD_COMMIT="${APP_BUILD_COMMIT}"
+ENV APP_BUILD_DATE="${APP_BUILD_DATE}"
 
 # start the container process
 ENTRYPOINT ["/entrypoint.sh"]

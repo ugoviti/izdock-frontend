@@ -1,0 +1,80 @@
+## Build, test and publish izdock/frontend images (replaces the old Drone pipelines)
+##
+## Variants, versions and tags are defined in docker-bake.hcl. Every image is pushed both
+## to the Gitea container registry and to Docker Hub (see IMAGES in docker-bake.hcl).
+##
+## Triggers:
+## - push on main (including the nightly version bumps of update-versions.yml)
+## - weekly rebuild, to pick up Debian security updates of the base images
+## - manual run
+##
+## Runner requirements (act_runner):
+## - jobs can reach the host Docker daemon (socket mounted into the job container,
+##   see container.valid_volumes / container.docker_host in the runner config);
+##   using the host daemon also keeps the layer cache between runs
+## - the job image has the docker CLI with the buildx plugin, plus bash and python3
+##   (e.g. the runner label "ubuntu-latest" mapped to docker://catthehacker/ubuntu:act-latest)
+##
+## Required secrets (repository or organization):
+## - REGISTRY_USERNAME / REGISTRY_TOKEN: Gitea user + token with "write:package" scope
+##   (the nightly update-versions.yml job also needs "write:repository")
+## - DOCKERHUB_USERNAME / DOCKERHUB_TOKEN: Docker Hub user + access token (Read & Write)
+
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build metadata
+        run: |
+          echo "APP_VER_BUILD=${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "APP_BUILD_COMMIT=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          echo "APP_BUILD_DATE=$(date -u +%s)" >> "$GITHUB_ENV"
+          docker buildx bake --print 2>/dev/null
+
+      - name: Build all variants
+        run: docker buildx bake --progress=plain
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          # first tag of every exported target (php74-base has none)
+          docker buildx bake --print 2>/dev/null \
+            | python3 -c 'import json,sys; [print(t["tags"][0]) for t in json.load(sys.stdin)["target"].values() if t.get("tags")]' \
+            | while read -r image; do scripts/smoke-test.sh "$image"; done
+
+      - name: Login to registries
+        env:
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "$REGISTRY_TOKEN" | docker login git.quantico.srl -u "$REGISTRY_USERNAME" --password-stdin
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+      # everything is cached by the previous build, this only tags and uploads
+      - name: Push to Gitea registry and Docker Hub
+        run: docker buildx bake --push
+
+      - name: Logout from registries
+        if: always()
+        run: |
+          docker logout git.quantico.srl || true
+          docker logout || true

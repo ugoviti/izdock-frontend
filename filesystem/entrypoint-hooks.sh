@@ -101,7 +101,7 @@ cfgService_httpd() {
     a2enmod proxy_fcgi 1>/dev/null
     
     # create apache configuration file if the conf.d directory is writable
-    if [[ ! -e "${HTTPD_CONF_DIR}/conf.d/php-fpm.conf" && -w ${HTTPD_CONF_DIR}/conf.d/php-fpm.conf ]]; then
+    if [[ ! -e "${HTTPD_CONF_DIR}/conf.d/php-fpm.conf" && -w "${HTTPD_CONF_DIR}/conf.d" ]]; then
     echo "<FilesMatch \"\.php$\">
 <If \"-f %{REQUEST_FILENAME}\">
 # use the unix domain socket (don't use for docker env)

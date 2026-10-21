@@ -1,0 +1,47 @@
+## Nightly version bump
+##
+## Looks for new PHP patch releases (official php:X.Y.Z-fpm-<debian> images on Docker Hub)
+## and new PECL releases (xdebug, redis, memcached) for the versions marked "# auto:" in
+## docker-bake.hcl. When something changed it commits the new versions to main: that push
+## starts build.yml, which builds, tests and publishes the images.
+## If a new version breaks the build, nothing is published: fix it or pin the version
+## (remove its "# auto:" marker) in docker-bake.hcl.
+##
+## The push uses REGISTRY_USERNAME / REGISTRY_TOKEN (scope "write:repository"): a push made
+## with the automatic Actions token would not start build.yml.
+
+name: update-versions
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: update-versions
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Look for new versions
+        id: versions
+        run: python3 scripts/update-versions.py docker-bake.hcl
+
+      - name: Commit new versions
+        if: steps.versions.outputs.changed == 'true'
+        env:
+          SUMMARY: ${{ steps.versions.outputs.summary }}
+        run: |
+          git config user.name "izdock-bot"
+          git config user.email "izdock-bot@git.quantico.srl"
+          git add docker-bake.hcl
+          printf 'Update versions\n\n%s\n' "$SUMMARY" | git commit -F -
+          git push origin HEAD:main
