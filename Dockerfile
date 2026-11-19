@@ -139,8 +139,10 @@ ENV APP_INSTALL_DEPS=' \
     openssh-client \
     sshpass \
     apt-transport-https \
-    ssh \
     '
+## NOTE: do not add the "ssh" metapackage: it pulls in openssh-server, which the Debian
+## package enables under runit (/etc/runit/runsvdir/default/ssh) and, with network_mode: host,
+## binds port 22 of the host. Only the client (openssh-client) is needed.
 
 RUN set -xe && \
   # upgrade the system

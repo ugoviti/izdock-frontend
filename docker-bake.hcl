@@ -14,8 +14,8 @@
 ##   # auto: php <minor> <debian>  -> latest php:<minor>.X-fpm-<debian> tag on Docker Hub
 ##   # auto: pecl <package>        -> latest stable release on pecl.php.net
 ## ---------------------------------------------------------------------------------------
-variable "PHP85_VERSION" { default = "8.5.12" } # auto: php 8.5 trixie
-variable "PHP84_VERSION" { default = "8.4.27" } # auto: php 8.4 trixie
+variable "PHP85_VERSION" { default = "8.5.13" } # auto: php 8.5 trixie
+variable "PHP84_VERSION" { default = "8.4.28" } # auto: php 8.4 trixie
 ## PHP 7.4 is EOL: pinned, never updated automatically
 variable "PHP74_VERSION" { default = "7.4.33" }
 

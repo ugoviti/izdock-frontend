@@ -27,6 +27,12 @@ for m in $required; do
 done
 echo "modules: ok"
 
+# no SSH server: openssh-server would be auto-enabled by runit and bind port 22
+docker run --rm --entrypoint sh "$image" -c \
+  '! dpkg -s openssh-server >/dev/null 2>&1 && [ ! -e /usr/sbin/sshd ] && [ ! -e /etc/runit/runsvdir/default/ssh ]' \
+  || fail "openssh-server is installed"
+echo "sshd: absent"
+
 # Apache + PHP-FPM serve a PHP page (and do not leak its source)
 docker run -d --name "$name" "$image" >/dev/null
 for _ in $(seq 1 30); do
