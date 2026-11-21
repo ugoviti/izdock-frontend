@@ -15,10 +15,11 @@
 ## - the job image has the docker CLI with the buildx plugin, plus bash and python3
 ##   (e.g. the runner label "ubuntu-latest" mapped to docker://catthehacker/ubuntu:act-latest)
 ##
-## Required secrets (repository or organization):
-## - REGISTRY_USERNAME / REGISTRY_TOKEN: Gitea user + token with "write:package" scope
-##   (the nightly update-versions.yml job also needs "write:repository")
-## - DOCKERHUB_USERNAME / DOCKERHUB_TOKEN: Docker Hub user + access token (Read & Write)
+## Required secrets and variables (organization initzero, shared with the other izdock images):
+## - PACKAGES_USERNAME (variable) / PACKAGES_TOKEN (secret): Gitea user + token with
+##   "package: Read and Write" scope, the user must be allowed to write the packages of initzero
+## - DOCKER_USERNAME / DOCKER_PASSWORD (secrets): Docker Hub user + access token (Read & Write)
+## The old repository secrets REGISTRY_* and DOCKERHUB_* are not used any more.
 
 name: build
 
@@ -61,13 +62,18 @@ jobs:
 
       - name: Login to registries
         env:
-          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          PACKAGES_USERNAME: ${{ vars.PACKAGES_USERNAME }}
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo "$REGISTRY_TOKEN" | docker login git.quantico.srl -u "$REGISTRY_USERNAME" --password-stdin
-          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          set -euo pipefail
+          # an empty user or token would end in a confusing "unauthorized": say which one is missing
+          for v in PACKAGES_USERNAME PACKAGES_TOKEN DOCKER_USERNAME DOCKER_PASSWORD; do
+            [ -n "${!v}" ] || { echo "::error::$v is empty: define it in the Actions settings of initzero"; exit 1; }
+          done
+          echo "$PACKAGES_TOKEN" | docker login git.quantico.srl -u "$PACKAGES_USERNAME" --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       # everything is cached by the previous build, this only tags and uploads
       - name: Push to Gitea registry and Docker Hub

@@ -7,8 +7,10 @@
 ## If a new version breaks the build, nothing is published: fix it or pin the version
 ## (remove its "# auto:" marker) in docker-bake.hcl.
 ##
-## The push uses REGISTRY_USERNAME / REGISTRY_TOKEN (scope "write:repository"): a push made
-## with the automatic Actions token would not start build.yml.
+## The push uses secrets.UPDATES_TOKEN (Gitea token of a bot or user with write access to this
+## repository, scope "repository: Read and Write"), like the updates workflow of the other izdock
+## images. Without it the automatic Actions token is used: the commit lands on main, but a push
+## made with that token does not start build.yml (run it by hand, or wait for the weekly rebuild).
 
 name: update-versions
 
@@ -29,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-          token: ${{ secrets.REGISTRY_TOKEN }}
+          token: ${{ secrets.UPDATES_TOKEN || gitea.token }}
 
       - name: Look for new versions
         id: versions
