@@ -13,7 +13,12 @@
 ## (scripts/update-versions.py), keep them on a single line:
 ##   # auto: php <minor> <debian>  -> latest php:<minor>.X-fpm-<debian> tag on Docker Hub
 ##   # auto: pecl <package>        -> latest stable release on pecl.php.net
+## lines marked "# pending:" are workarounds waiting for a PECL release: the nightly job
+## fails (after bumping the versions) as soon as a newer stable release is out, as a
+## reminder to drop the workaround:
+##   # pending: <package>><version> ...  -> fail when stable <package> is newer than <version>
 ## ---------------------------------------------------------------------------------------
+variable "PHP86_VERSION" { default = "8.6.0" } # auto: php 8.6 trixie
 variable "PHP85_VERSION" { default = "8.5.13" } # auto: php 8.5 trixie
 variable "PHP84_VERSION" { default = "8.4.28" } # auto: php 8.4 trixie
 ## PHP 7.4 is EOL: pinned, never updated automatically
@@ -22,6 +27,13 @@ variable "PHP74_VERSION" { default = "7.4.33" }
 variable "XDEBUG_VERSION"    { default = "3.5.3" } # auto: pecl xdebug
 variable "REDIS_VERSION"     { default = "6.3.0" } # auto: pecl redis
 variable "MEMCACHED_VERSION" { default = "3.4.0" } # auto: pecl memcached
+
+## PHP 8.6 workarounds (2026-11-24), remove them when the nightly job reports a new release:
+## - xdebug 3.5.3 refuses PHP >= 8.6 and memcached 3.4.0 does not compile: not built yet
+## - redis 6.3.0 does not compile: 6.4.0RC1 until the 6.4.0 stable release
+## - when all of them are gone, move latest and 8 to 8.6 (tags() of php86-trixie / php85-trixie)
+variable "PHP86_PECL_SKIP"     { default = "xdebug memcached" } # pending: xdebug>3.5.3 memcached>3.4.0
+variable "PHP86_REDIS_VERSION" { default = "6.4.0RC1" } # pending: redis>6.3.0
 
 ## ---------------------------------------------------------------------------------------
 ## publishing
@@ -67,7 +79,7 @@ function "major" {
 ## targets
 ## ---------------------------------------------------------------------------------------
 group "default" {
-  targets = ["php85-trixie", "php84-trixie", "php74-bullseye"]
+  targets = ["php86-trixie", "php85-trixie", "php84-trixie", "php74-bullseye"]
 }
 
 target "_common" {
@@ -86,6 +98,19 @@ target "_common" {
     "org.opencontainers.image.source"   = "https://git.quantico.srl/initzero/izdock-frontend"
     "org.opencontainers.image.revision" = APP_BUILD_COMMIT
   }
+}
+
+## 8.6 (latest and 8 stay on 8.5 until 8.6 has every PECL module)
+target "php86-trixie" {
+  inherits = ["_common"]
+  args = {
+    APP_VER               = PHP86_VERSION
+    DEBIAN_RELEASE        = "trixie"
+    PHP_MODULE_REDIS_VER  = PHP86_REDIS_VERSION
+    PHP_PECL_SKIP         = PHP86_PECL_SKIP
+  }
+  labels = { "org.opencontainers.image.version" = PHP86_VERSION }
+  tags   = tags(PHP86_VERSION, false, false)
 }
 
 ## default variant: latest, 8, 8.5

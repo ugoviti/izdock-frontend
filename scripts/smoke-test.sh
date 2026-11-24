@@ -22,7 +22,10 @@ echo "$out" | grep -qi "warning" && fail "PHP startup warnings: $out"
 # compiled modules are present (pecl modules are built but not enabled by default)
 present="$(docker run --rm --entrypoint sh "$image" -c \
   'php -m; ls "$(php -r "echo ini_get(\"extension_dir\");")"' 2>&1 | tr 'A-Z' 'a-z' | sed 's/^zend opcache$/opcache/; s/\.so$//')"
+# pecl modules this variant does not build yet (PHP_PECL_SKIP in docker-bake.hcl)
+skip="$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$image" | sed -n 's/^PHP_PECL_SKIP=//p')"
 for m in $required; do
+  case " $skip " in *" $m "*) echo "module $m: skipped (PHP_PECL_SKIP)"; continue ;; esac
   echo "$present" | grep -qx "$m" || fail "module $m missing"
 done
 echo "modules: ok"

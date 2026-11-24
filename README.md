@@ -4,9 +4,14 @@ Production ready Apache / NGINX Web Server + PHP-FPM + izsendmail for MTA sendin
 # Supported tags
 | PHP | Debian | Tags |
 |---|---|---|
+| 8.6 | trixie | `8.6.X-COMMIT`, `8.6.X-BUILD`, `8.6.X`, `8.6` |
 | 8.5 | trixie | `8.5.X-COMMIT`, `8.5.X-BUILD`, `8.5.X`, `8.5`, `8`, `latest` |
 | 8.4 | trixie | `8.4.X-COMMIT`, `8.4.X-BUILD`, `8.4.X`, `8.4` |
 | 7.4 (EOL, patched) | bullseye | `7.4.33-COMMIT`, `7.4.33-BUILD`, `7.4.33`, `7.4`, `7` |
+
+**PHP 8.6**: the `xdebug` and `memcached` modules are not available yet (no PECL release supports PHP 8.6)
+and `redis` is the 6.4.0RC1 release candidate. They will be added as soon as stable releases are out:
+use the 8.5 image (also `8` and `latest`) if you need them.
 
 Where **X** is the patch version number, **COMMIT** is the GIT commit ID, and **BUILD** is the build number
 (look into project [Tags](https://hub.docker.com/r/izdock/frontend/tags) page to discover the latest versions).
@@ -20,21 +25,21 @@ per-variant overrides and the tag scheme.
 
 ```
 docker buildx bake --print            # resolved configuration and tags
-docker buildx bake php85-trixie       # build one variant
+docker buildx bake php86-trixie       # build one variant
 docker buildx bake                    # build every variant
 scripts/smoke-test.sh izdock/frontend:8.5
 ```
 
 CI (Gitea Actions, `.gitea/workflows/`):
 - `build.yml`: on every push to `main`, weekly and on demand builds every variant, runs the smoke test and pushes to both registries
-- `update-versions.yml`: every night bumps the versions marked `# auto:` in `docker-bake.hcl` to the latest PHP patch releases and PECL modules and commits them, which triggers a build
+- `update-versions.yml`: every night bumps the versions marked `# auto:` in `docker-bake.hcl` to the latest PHP patch releases and PECL modules and commits them, which triggers a build; it fails when a PECL release awaited by a `# pending:` workaround is out
 
 ## PHP 7.4 (end of life)
 PHP 7.4 no longer receives official updates. The 7.4 images are built on a base image compiled from `php74/`:
 the upstream docker-library `7.4/bullseye/fpm` Dockerfile plus the minimal backport published by the PHP security team
 for **CVE-2026-109618** and **CVE-2026-109619** (PHP2Shell, php-src commit `712e60f9ed`).
 Debian 11 (bullseye) is EOL too and its packages come from `archive.debian.org` (no more security updates).
-Plan the migration to PHP 8.4 or 8.5.
+Plan the migration to PHP 8.4, 8.5 or 8.6.
 
 # Dockerfile
 - https://git.quantico.srl/initzero/izdock-frontend/src/branch/main/Dockerfile

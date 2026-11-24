@@ -7,6 +7,9 @@
 ## If a new version breaks the build, nothing is published: fix it or pin the version
 ## (remove its "# auto:" marker) in docker-bake.hcl.
 ##
+## Afterwards it checks the "# pending:" markers of docker-bake.hcl: the job fails when a PECL
+## release a workaround is waiting for is out (e.g. PHP 8.6 support), as a reminder to remove it.
+##
 ## The push uses secrets.UPDATES_TOKEN (Gitea token of a bot or user with write access to this
 ## repository, scope "repository: Read and Write"), like the updates workflow of the other izdock
 ## images. Without it the automatic Actions token is used: the commit lands on main, but a push
@@ -47,3 +50,6 @@ jobs:
           git add docker-bake.hcl
           printf 'Update versions\n\n%s\n' "$SUMMARY" | git commit -F -
           git push origin HEAD:main
+
+      - name: Check pending workarounds
+        run: python3 scripts/update-versions.py --check-pending docker-bake.hcl

@@ -59,6 +59,10 @@ ENV PHP_MODULE_REDIS_VER=${PHP_MODULE_REDIS_VER}
 ARG PHP_MODULE_MEMCACHED_VER=3.4.0
 ENV PHP_MODULE_MEMCACHED_VER=${PHP_MODULE_MEMCACHED_VER}
 
+# pecl modules not built in this variant (no release supporting its PHP version yet)
+ARG PHP_PECL_SKIP=""
+ENV PHP_PECL_SKIP=${PHP_PECL_SKIP}
+
 ## bundled php modules to compile
 ## modules already built into the base image (e.g. opcache on PHP >= 8.5) are skipped automatically
 
@@ -214,14 +218,23 @@ RUN set -xe && \
 #   #make test NO_INTERACTION=1 && \
 #   make install && \
   \
-  : "--- install custom php module: redis ---" && \
-  pecl install redis-${PHP_MODULE_REDIS_VER} && \
-  \
-  : "--- install custom php module: memcached ---" && \
-  pecl install memcached-${PHP_MODULE_MEMCACHED_VER} && \
-  \
-  : "--- install custom php module: xdebug ---" && \
-  pecl install xdebug-${PHP_MODULE_XDEBUG_VER} && \
+  # PECL sources are built with phpize instead of "pecl install": the official images
+  # no longer ship PEAR/PECL since PHP 8.6
+  pecl_build() { \
+    case " ${PHP_PECL_SKIP} " in *" $1 "*) echo "skip pecl $1: listed in PHP_PECL_SKIP"; return 0 ;; esac; \
+    : "--- install custom php module: $1-$2 ---" && \
+    mkdir -p /usr/src/pecl/$1 && \
+    curl -fsSL --retry 3 --connect-timeout 15 "https://pecl.php.net/get/$1-$2.tgz" | tar xz -C /usr/src/pecl/$1 && \
+    cd /usr/src/pecl/$1/$1-$2 && \
+    phpize && \
+    ./configure && \
+    make -j$(nproc) && \
+    make install && \
+    cd / && rm -rf /usr/src/pecl/$1 ; \
+  } && \
+  pecl_build redis ${PHP_MODULE_REDIS_VER} && \
+  pecl_build memcached ${PHP_MODULE_MEMCACHED_VER} && \
+  pecl_build xdebug ${PHP_MODULE_XDEBUG_VER} && \
   \
   : "---------- install extra php modules ----------" && \
   loaded="$(php -m | tr 'A-Z' 'a-z' | sed 's/^zend opcache$/opcache/')" && \
@@ -263,8 +276,8 @@ RUN set -xe && \
   apt-get purge --auto-remove -o APT::AutoRemove::RecommendsImportant=false -y && \
   rm -rf /var/lib/apt/lists/* /tmp/* && \
   # update pecl channel definitions https://github.com/docker-library/php/issues/443
-  pecl update-channels && \
-  rm -rf /tmp/pear ~/.pearrc \
+  if command -v pecl >/dev/null; then pecl update-channels ;fi && \
+  rm -rf /tmp/pear ~/.pearrc /usr/src/pecl \
   ;fi && \
   \
   : "---------- show shipped PHP version ----------" && \
@@ -277,7 +290,7 @@ RUN set -ex && \
   ln -s ${PHP_PREFIX}/etc/php /etc/php && \
   ln -s ${PHP_PREFIX}/etc/php-fpm.d /etc/php/php-fpm.d && \
   ln -s ${PHP_PREFIX}/etc/php-fpm.conf /etc/php/php-fpm.conf && \
-  ln -s ${PHP_PREFIX}/etc/pear.conf /etc/php/pear.conf && \
+  if [ -e ${PHP_PREFIX}/etc/pear.conf ]; then ln -s ${PHP_PREFIX}/etc/pear.conf /etc/php/pear.conf ;fi && \
   ln -s /usr/lib/apache2/modules /etc/apache2/modules && \
   ln -s /usr/bin/rotatelogs /usr/sbin/rotatelogs && \
   if [ -e "${HTTPD_PREFIX}" ]; then mkdir -p "${HTTPD_PREFIX}/conf.d" ;fi && \
