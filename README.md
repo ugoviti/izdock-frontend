@@ -38,6 +38,8 @@ CI (Gitea Actions, `.gitea/workflows/`):
 PHP 7.4 no longer receives official updates. The 7.4 images are built on a base image compiled from `php74/`:
 the upstream docker-library `7.4/bullseye/fpm` Dockerfile plus the minimal backport published by the PHP security team
 for **CVE-2026-109618** and **CVE-2026-109619** (PHP2Shell, php-src commit `712e60f9ed`).
+**CVE-2026-115560** has no 7.4 backport: the image mitigates it with `session.upload_progress.enabled = 0`
+(`conf.d/izdock-cve-2026-115560.ini`), as the advisory recommends. Do not turn it back on.
 Debian 11 (bullseye) is EOL too and its packages come from `archive.debian.org` (no more security updates).
 Plan the migration to PHP 8.4, 8.5 or 8.6.
 

@@ -36,6 +36,14 @@ docker run --rm --entrypoint sh "$image" -c \
   || fail "openssh-server is installed"
 echo "sshd: absent"
 
+# PHP 7.4 has no fix for CVE-2026-115560: session upload progress must stay off
+upload_progress="$(docker run --rm --entrypoint php "$image" -r \
+  'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION . " " . var_export((bool) ini_get("session.upload_progress.enabled"), true);')"
+if [[ "$upload_progress" == "7.4 "* ]]; then
+  [[ "$upload_progress" == "7.4 false" ]] || fail "session.upload_progress.enabled is on (CVE-2026-115560)"
+  echo "CVE-2026-115560 mitigation: ok"
+fi
+
 # Apache + PHP-FPM serve a PHP page (and do not leak its source)
 docker run -d --name "$name" "$image" >/dev/null
 for _ in $(seq 1 30); do

@@ -112,7 +112,7 @@ COPY docker-php-source /usr/local/bin/
 # izdock: security backports applied on top of the release tarball
 COPY patches/ /usr/src/php-patches/
 ENV PHP_PATCHES="CVE-2026-109618 CVE-2026-109619"
-LABEL org.opencontainers.image.description="PHP 7.4.33 FPM (bullseye) with backported fixes for CVE-2026-109618 and CVE-2026-109619"
+LABEL org.opencontainers.image.description="PHP 7.4.33 FPM (bullseye) with backported fixes for CVE-2026-109618 and CVE-2026-109619, CVE-2026-115560 mitigated"
 
 RUN set -eux; \
 	\
@@ -244,6 +244,11 @@ COPY docker-php-ext-* docker-php-entrypoint /usr/local/bin/
 
 # sodium was built as a shared module (so that it can be replaced later if so desired), so let's enable it too (https://github.com/docker-library/php/issues/598)
 RUN docker-php-ext-enable sodium
+
+# izdock: CVE-2026-115560 (GHSA-658j-r8rw-q6mx) has no 7.4 backport. Mitigate it as the advisory recommends,
+# by turning session upload progress off in the configuration (ini_set() from the application is too late).
+# The fixed 8.x releases turn it off by default.
+RUN echo 'session.upload_progress.enabled = 0' > "$PHP_INI_DIR/conf.d/izdock-cve-2026-115560.ini"
 
 ENTRYPOINT ["docker-php-entrypoint"]
 WORKDIR /var/www/html
